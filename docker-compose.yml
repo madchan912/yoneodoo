@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  # 1. 기존에 잘 쓰고 있던 DB (설정 그대로 유지)
+  db:
+    image: postgres:15-alpine
+    container_name: yoneodoo-postgres
+    ports:
+      - "5433:5432" 
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: yoneodoo
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # 2. 메인 백엔드 서비스 (Java Spring Boot)
+  api:
+    build: 
+      context: ./yoneodoo-api  # 현재 위치(최상단)에서 API 폴더를 찾아가서 Dockerfile을 실행해라!
+    image: yoneodoo-api:latest
+    container_name: yoneodoo-api
+    ports:
+      - "8080:8080"
+    environment:
+      # ⭐ 데브옵스 핵심 마법: 도커 네트워크 안에서는 컨테이너 이름('db')이 곧 호스트(IP) 주소가 됩니다.
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: yoneodoo
+      DB_USER: root
+      DB_PASSWORD: 1234
+    depends_on:
+      - db # DB가 켜진 후에 API가 켜져야 에러가 안 납니다.
+
+  # 3. AI 크롤링 워커 (Python)
+  data:
+    build:
+      context: ./yoneodoo-data  # 최상단에서 Data 폴더를 찾아가서 빌드해라!
+    image: yoneodoo-data:latest
+    container_name: yoneodoo-data
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: yoneodoo
+      DB_USER: root
+      DB_PASSWORD: 1234
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
