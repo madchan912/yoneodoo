@@ -1,0 +1,64 @@
+# 요너두(YoNeoDoo) — 프로젝트 컨텍스트
+
+맥북·데스크톱 등 **여러 환경에서 동일한 사실**을 맞추기 위한 문서입니다. 아키텍처나 규칙이 바뀌면 이 파일도 함께 수정하세요.
+
+## 제품
+
+- **요너두**: 냉장고 재료 기반으로 유튜브 요리를 찾아주는 AI 보조 서비스. 재료 매칭, 영상 노출, 단순한「내 냉장고」UX.
+- **라이브**: [yoneodoo.vercel.app](https://yoneodoo.vercel.app/) (기획·로드맵 서사는 루트 `README.md` 참고)
+
+## 레포 구성 (멀티 레포 / MSA 스타일)
+
+| 폴더 | 역할 | 스택(요약) |
+|------|------|-------------|
+| `yoneodoo-web` | 사용자 UI | React 19, Vite 8, axios |
+| `yoneodoo-api` | REST API, 저장소, 비즈니스 로직 | Spring Boot, Gradle에서 Java 21 툴체인, Spring Data JPA, PostgreSQL(JSONB) |
+| `yoneodoo-data` | 크롤링·자막·LLM → API로 레시피 적재 | Python, Ollama 호환 OpenAI 클라이언트, youtube-transcript, scrapetube, requests |
+| 루트 `README.md` | 제품·아키텍처 개요 | — |
+
+**데이터 흐름:** `yoneodoo-data`가 유튜브 수집 → LLM으로 정규화 → **`yoneodoo-api`에 POST** → `yoneodoo-web`이 레시피·재료 검색을 **GET**으로 조회.
+
+## API 표면 (현재)
+
+- `GET /api/v1/recipes` — 레시피 목록 (현재는 엔티티 그대로 노출되는 구간 있음)
+- `POST /api/v1/recipes` — 크롤러가 레시피 페이로드 생성·저장 (`RecipeCreateRequest`)
+- `GET /api/v1/ingredients/search?keyword=` — 기동 시 레시피 JSON에서 뽑은 재료 **인메모리 캐시** 기반 검색
+- `GET /health` — 간단한 생존 확인 문자열
+- `/api/v1/fridge` — 유저 기반 냉장고 API 존재. **웹 v1**은「내 냉장고」를 **localStorage**로 처리하므로, 서버 냉장고는 현재 UX에서 선택 사항.
+
+## 저장 모델 (현재)
+
+- **Recipe**: JPA 엔티티, `ingredients`는 JSON 리스트 (`RecipeIngredientData`: `name`, `amount`), `videoId`, `status`, `transcript`, `youtuberName` 등.
+- **User**: 소셜 필드 + `fridgeIngredients` JSON 문자열 리스트 (향후 계정·냉장고 동기화).
+- **CrawlingData**: `com.yoneodoo.api.crawling` 패키지의 레거시/단순 테이블 — `Recipe` 파이프라인과 병행 필요 여부 검토 대상.
+
+## 설정·환경
+
+- API: `application.yaml`에서 기본 프로필 `local`; DB는 `application-local.yaml` / `application-prod.yaml`. 운영은 `DB_URL`, `DB_USER`, `DB_PASSWORD`.
+- 웹 README에 `REACT_APP_*` 언급이 있으나 실제 앱은 **Vite** — 베이스 URL 도입 시 **`VITE_*`** 명명 권장.
+- **운영 갭:** `yoneodoo-web`, `yoneodoo-data`에 Render API URL이 코드에 하드코딩되어 있음. README의 `.env` 설명과 **구현을 맞출 것**.
+
+## 알려진 기술 부채 (v1)
+
+1. **API 베이스 URL 하드코딩** (웹 `App.jsx`, 데이터 `main.py`) vs 환경변수 기반.
+2. **CORS**가 컨트롤러별 (`*` vs `localhost:5173`) — 한곳에서 환경별로 통합하는 편이 안전.
+3. **거대 단일 UI** — 로직 대부분이 `App.jsx`에 집중 → v1.5 토글·검색 모드 확장이 어려움.
+4. **재료 검색 캐시** — `@PostConstruct`에서 1회 구축 → 새 레시피 저장 후에도 재기동 전까지 검색 반영 안 될 수 있음 (별도 갱신 연동 필요).
+5. **일부 API가 JPA 엔티티 직접 반환** — 클라이언트와 결합도 큼; 큰 변경 전에는 **응답 DTO** 권장.
+6. **검증·에러** — Bean Validation 최소; 서비스의 `RuntimeException` → HTTP 응답 일관성 부족; 계약 안정화 시 `@ControllerAdvice` 도입 검토.
+7. **문서 드리프트** — 예: 웹 README의 `npm start` vs 실제 Vite `npm run dev`; 스크립트·환경변수명 정리.
+
+## 보안·운영 (v1 수준)
+
+- 쓰기 엔드포인트(`POST /recipes`)는 규모 커지기 전에 토큰·IP 허용·내부 전용 등으로 보호 검토.
+- 수정하는 구간은 `System.out` 대신 구조화 로깅(sl4fj 등) 권장.
+
+## 코드 찾을 위치
+
+- 웹: `yoneodoo-web/src/App.jsx`, `package.json` scripts.
+- API: `yoneodoo-api/.../YoneodooApiApplication.java`, `controller/`, `service/`.
+- 데이터 파이프라인: `yoneodoo-data/main.py`, `requirements.txt`, 코드에서 참조하는 `config.json`(선택).
+
+---
+
+*내부 논의 기준으로 정리됨: 리팩토링 우선순위, v1.5 백로그(요리명 검색 + 재료 지능화),「마스터 재료 + 승인」vs「카테고리 우선」전략.*
