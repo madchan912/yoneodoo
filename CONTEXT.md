@@ -35,18 +35,17 @@
 ## 설정·환경
 
 - API: `application.yaml`에서 기본 프로필 `local`; DB는 `application-local.yaml` / `application-prod.yaml`. 운영은 `DB_URL`, `DB_USER`, `DB_PASSWORD`.
-- 웹 README에 `REACT_APP_*` 언급이 있으나 실제 앱은 **Vite** — 베이스 URL 도입 시 **`VITE_*`** 명명 권장.
-- **운영 갭:** `yoneodoo-web`, `yoneodoo-data`에 Render API URL이 코드에 하드코딩되어 있음. README의 `.env` 설명과 **구현을 맞출 것**.
+- 웹은 **`VITE_API_BASE_URL`** 로 API 오리진 설정 (Vite).
+- **환경 파일:** `yoneodoo-web`은 `.env` / `.env.*`를 Git에서 제외하고 **`.env.example`만** 추적한다. `yoneodoo-data`도 `.gitignore`에 `.env`가 있다.
 
 ## 알려진 기술 부채 (v1)
 
-1. **API 베이스 URL 하드코딩** (웹 `App.jsx`, 데이터 `main.py`) vs 환경변수 기반.
-2. **CORS**가 컨트롤러별 (`*` vs `localhost:5173`) — 한곳에서 환경별로 통합하는 편이 안전.
-3. **거대 단일 UI** — 로직 대부분이 `App.jsx`에 집중 → v1.5 토글·검색 모드 확장이 어려움.
-4. **재료 검색 캐시** — `@PostConstruct`에서 1회 구축 → 새 레시피 저장 후에도 재기동 전까지 검색 반영 안 될 수 있음 (별도 갱신 연동 필요).
-5. **일부 API가 JPA 엔티티 직접 반환** — 클라이언트와 결합도 큼; 큰 변경 전에는 **응답 DTO** 권장.
-6. **검증·에러** — Bean Validation 최소; 서비스의 `RuntimeException` → HTTP 응답 일관성 부족; 계약 안정화 시 `@ControllerAdvice` 도입 검토.
-7. **문서 드리프트** — 예: 웹 README의 `npm start` vs 실제 Vite `npm run dev`; 스크립트·환경변수명 정리.
+1. **CORS**가 컨트롤러별 (`*` vs `localhost:5173`) — 한곳에서 환경별로 통합하는 편이 안전.
+2. **거대 단일 UI** — 로직 대부분이 `App.jsx`에 집중 → v1.5 토글·검색 모드 확장이 어려움.
+3. **재료 검색 캐시** — `@PostConstruct`에서 1회 구축 → 새 레시피 저장 후에도 재기동 전까지 검색 반영 안 될 수 있음 (별도 갱신 연동 필요).
+4. **일부 API가 JPA 엔티티 직접 반환** — 클라이언트와 결합도 큼; 큰 변경 전에는 **응답 DTO** 권장.
+5. **검증·에러** — Bean Validation 최소; 서비스의 `RuntimeException` → HTTP 응답 일관성 부족; 계약 안정화 시 `@ControllerAdvice` 도입 검토.
+6. **문서 드리프트** — README·스크립트·환경변수명이 코드와 어긋나지 않게 주기 점검.
 
 ## 보안·운영 (v1 수준)
 

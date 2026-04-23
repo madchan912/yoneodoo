@@ -1,1 +1,21 @@
-질문에 답하거나 코드를 생성하기 전에 항상 CONTEXT.md, PLAN.md, TASK.md를 읽어 현재 프로젝트 상태와 목표를 파악할 것.
+# YoNeoDoo Cursor Rules
+
+1. 컨텍스트 유지 (Context Management)
+- 답변하거나 코드를 생성하기 전에 반드시 CONTEXT.md, PLAN.md, TASK.md를 먼저 읽고 현재 프로젝트의 진행 상태와 아키텍처를 파악할 것.
+- 작업 완료 후 소스 코드의 변경이나 계획의 변동이 있다면 위 3개 파일을 최신화할 것.
+
+2. 레포지토리별 커밋 메시지 제안 및 실행용 bash (Git Commit Rules)
+- 작업 완료 후, 변경이 있는 각 레포지토리(yoneodoo-web, yoneodoo-api, yoneodoo-data, 멀티레포 메타용 root)마다 **독립적인** `[type]: [description]` 형식 커밋 메시지를 제안할 것.
+- 해당 커밋에 `TASK.md`를 수정했다면 메시지 끝에 **`& TASK.md 업데이트`**를 붙일 것. (서브 레포에 TASK가 없으면 생략해도 됨.)
+- 사용자가 [Run]으로 바로 실행할 수 있도록, **레포별로 `cd`부터 `git commit`까지** 이어지는 **bash 코드 블록을 반드시** 제공할 것. 변경이 없는 레포는 블록을 생략하거나 주석으로 “변경 없음”을 적을 것.
+- 출력 예시:
+  ```bash
+  cd yoneodoo-web
+  git add .
+  git commit -m "feat: API 베이스 URL 환경변수 처리 & TASK.md 업데이트"
+  ```
+
+3. 기술 스택 가드레일 (Tech Stack)
+- Web: React 19 + Vite (VITE_ 변수 사용)
+- API: Java 21 + Spring Boot 4.x + Spring Data JPA (정확한 부트 버전은 yoneodoo-api/build.gradle 기준)
+- Data: Python + Ollama (Llama 3.1)

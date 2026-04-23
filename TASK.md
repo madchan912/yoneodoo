@@ -4,8 +4,8 @@
 
 ## 기반 작업 (v1.5 기능과 병행·선행)
 
-- [ ] **웹: API 베이스 URL을 env로** — `yoneodoo-web/src/App.jsx`의 Render 하드코딩을 `import.meta.env.VITE_API_BASE_URL`(또는 팀 합의 이름)으로 교체; `yoneodoo-web/README.md`에 문서화.
-- [ ] **데이터: API 베이스 URL을 env로** — `yoneodoo-data/main.py`가 `.env`의 `API_BASE_URL`을 우선 사용하도록 정리; 운영 URL 하드코딩 제거 또는 기본값 가드.
+- [x] **웹: API 베이스 URL을 env로** — `yoneodoo-web/src/App.jsx`의 Render 하드코딩을 `import.meta.env.VITE_API_BASE_URL`(또는 팀 합의 이름)으로 교체; `yoneodoo-web/README.md`에 문서화.
+- [x] **데이터: API 베이스 URL을 env로** — `yoneodoo-data/main.py`가 `.env`의 `API_BASE_URL`을 우선 사용하도록 정리; 운영 URL 하드코딩 제거 또는 기본값 가드.
 - [ ] **웹 README 정합** — 스크립트: `npm run dev` / `npm run build`; Vite용 `VITE_*`; 구식 `REACT_APP_*`·`npm start` 언급 수정·삭제.
 - [ ] **API: CORS** — `WebMvcConfigurer` + 프로퍼티 등 **한곳**에서 dev/prod 허용 오리진 관리; 동등 동작 확인 후 컨트롤러별 `@CrossOrigin` 제거.
 - [ ] **API: 재료 캐시 갱신** — `RecipeService.saveRecipe` 이후 `IngredientSearchService` 재구축(또는 공통 `rebuildCache`)을 호출해, 재시작 없이 신규 레시피가 검색에 반영되게.
