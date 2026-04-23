@@ -18,6 +18,10 @@
 
 **데이터 흐름:** `yoneodoo-data`가 유튜브 수집 → LLM으로 정규화 → **`yoneodoo-api`에 POST** → `yoneodoo-web`이 레시피·재료 검색을 **GET**으로 조회.
 
+## Git 동기화
+
+- **세션 시작 시 네 레포 pull 필수:** 에이전트를 새로 켜거나 프로젝트를 처음 연 뒤·다른 머신으로 옮긴 직후 작업을 시작하기 전에, **`yoneodoo-web`**, **`yoneodoo-api`**, **`yoneodoo-data`**, **멀티레포 루트(`02_Yoneodoo`)** 각각에서 `git pull`(또는 `git pull --rebase`)으로 원격과 맞출 것. 일괄 실행용 bash 예시는 `.cursorrules`를 참고한다.
+
 ## API 표면 (현재)
 
 - `GET /api/v1/recipes` — 레시피 목록 (현재는 엔티티 그대로 노출되는 구간 있음)
