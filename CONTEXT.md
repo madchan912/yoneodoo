@@ -47,6 +47,7 @@
 - API: `application.yaml`에서 기본 프로필 `local`; DB는 `application-local.yaml` / `application-prod.yaml`. 운영은 `DB_URL`, `DB_USER`, `DB_PASSWORD`. **어드민**은 환경변수 `ADMIN_SECRET`(YAML `yoneodoo.admin.secret`) — 로컬 기본값은 `application-local.yaml` 참고.
 - 웹은 **`VITE_API_BASE_URL`** 로 API 오리진 설정 (Vite).
 - **환경 파일:** `yoneodoo-web`은 `.env` / `.env.*`를 Git에서 제외하고 **`.env.example`만** 추적한다. `yoneodoo-data`도 `.gitignore`에 `.env`가 있다.
+- **DB 동기화(수동):** `yoneodoo-api/scripts/sync_prod_to_local_db.py` — 운영(SOURCE) `pg_dump` → 로컬(TARGET) `pg_restore`. 접속 정보는 `scripts/.env.sync`(비밀·Git 제외) 또는 `--env-file`.
 
 ## 알려진 기술 부채 (v1)
 

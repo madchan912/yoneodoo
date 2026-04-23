@@ -33,6 +33,7 @@
 
 ## 나중 (v1.5 이후 또는 막힐 때)
 
+- [x] **운영→로컬 DB 동기화 스크립트** — `yoneodoo-api/scripts/sync_prod_to_local_db.py` (+ `.sh` 래퍼), `.env.sync`로 접속 정보만 주입, 확인 프롬프트로 역방향 실수 방지. (`scripts/README.md`, `.env.sync.example` 참고)
 - [ ] **DTO 레이어** — 공개 GET은 JPA 엔티티가 아닌 DTO 반환.
 - [ ] **전역 예외 처리** — `RuntimeException` 직투 대신 HTTP 친화적 에러.
 - [ ] **Bean Validation** — `RecipeCreateRequest`, `FridgeAddRequest` 등.
