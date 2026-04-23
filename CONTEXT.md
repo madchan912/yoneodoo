@@ -29,6 +29,12 @@
 - `GET /api/v1/ingredients/search?keyword=` — 기동 시 레시피 JSON에서 뽑은 재료 **인메모리 캐시** 기반 검색
 - `GET /health` — 간단한 생존 확인 문자열
 - `/api/v1/fridge` — 유저 기반 냉장고 API 존재. **웹 v1**은「내 냉장고」를 **localStorage**로 처리하므로, 서버 냉장고는 현재 UX에서 선택 사항.
+- **Admin (`/api/v1/admin/**`)** — 헤더 `X-Admin-Secret`이 설정된 `ADMIN_SECRET`(Spring: `yoneodoo.admin.secret`)과 일치해야 통과. 예: `GET /api/v1/admin/dashboard/stats`, `GET /api/v1/admin/recipes?filter=`, `GET /api/v1/admin/ingredients/unclassified`. 미설정 시 해당 경로는 503.
+
+## 웹 라우팅
+
+- `/` — 기존 사용자 앱 (`App.jsx`)
+- `/admin`, `/admin/recipes`, `/admin/ingredients` — **MVP 관리자 UI** (React Router). 로그인 시크릿은 **sessionStorage** + `adminClient`가 `X-Admin-Secret`으로 전송.
 
 ## 저장 모델 (현재)
 
@@ -38,7 +44,7 @@
 
 ## 설정·환경
 
-- API: `application.yaml`에서 기본 프로필 `local`; DB는 `application-local.yaml` / `application-prod.yaml`. 운영은 `DB_URL`, `DB_USER`, `DB_PASSWORD`.
+- API: `application.yaml`에서 기본 프로필 `local`; DB는 `application-local.yaml` / `application-prod.yaml`. 운영은 `DB_URL`, `DB_USER`, `DB_PASSWORD`. **어드민**은 환경변수 `ADMIN_SECRET`(YAML `yoneodoo.admin.secret`) — 로컬 기본값은 `application-local.yaml` 참고.
 - 웹은 **`VITE_API_BASE_URL`** 로 API 오리진 설정 (Vite).
 - **환경 파일:** `yoneodoo-web`은 `.env` / `.env.*`를 Git에서 제외하고 **`.env.example`만** 추적한다. `yoneodoo-data`도 `.gitignore`에 `.env`가 있다.
 

@@ -10,6 +10,13 @@
 - [ ] **API: CORS** — `WebMvcConfigurer` + 프로퍼티 등 **한곳**에서 dev/prod 허용 오리진 관리; 동등 동작 확인 후 컨트롤러별 `@CrossOrigin` 제거.
 - [ ] **API: 재료 캐시 갱신** — `RecipeService.saveRecipe` 이후 `IngredientSearchService` 재구축(또는 공통 `rebuildCache`)을 호출해, 재시작 없이 신규 레시피가 검색에 반영되게.
 
+## MVP Admin (시크릿 기반 수동 운영)
+
+- [x] **API** — `ADMIN_SECRET` / `yoneodoo.admin.secret`, `AdminSecretAuthFilter`(`X-Admin-Secret`), `AdminController` 대시보드·레시피 목록·미분류(빈) API 뼈대.
+- [x] **Web** — `react-router-dom`, `/admin` 로그인(sessionStorage), `adminClient`, 사이드바·레시피 테이블·재료 매핑 UI 껍데기.
+- [ ] **운영 시크릿** — Render에 `ADMIN_SECRET` 설정, 주기적 로테이션 절차 문서화.
+- [ ] **미분류 재료** — DB/엔드포인트 연동 및 Admin UI 저장 동작.
+
 ## v1.5 — 요리명 검색 (UX + API)
 
 - [ ] **기획**: 토글 카피·동작(재료 vs 요리명), 빈 상태, 모바일 레이아웃 메모 확정.
