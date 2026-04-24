@@ -2,6 +2,17 @@
 
 `CONTEXT.md`, `PLAN.md`에서 뽑은 **실행 가능한 체크리스트**입니다. 완료 시 체크하고, 필요하면 날짜·담당을 적으세요.
 
+현재 사용자용 **요리명·재료 검색** 구현은 브랜치 **`feature/recipe-search`** 에서 진행한다 (`develop`에서 분기).
+
+## feature/recipe-search — 요리명·재료 통합 검색 (사용자 API/UI)
+
+- [ ] **API 계약** — 검색 모드(`dish` | `ingredient` | `combined` 등)와 쿼리 파라미터 확정, 응답 DTO(썸네일·해시태그용 재료 목록 등).
+- [ ] **요리명 검색** — `recipes.title` 기준 `ILIKE` 또는 PostgreSQL 전문 검색(`tsvector`); 데이터량 커지면 인덱스·`pg_trgm` 검토.
+- [ ] **재료 검색 + `ingredient_mapping`** — 사용자 키워드로 `master_name` / `raw_name` 매핑 행 조회 → 동일 마스터에 묶인 **모든 `raw_name`** 집합을 확장 → 레시피 JSON `ingredients[].name`(정규화 규칙 동일)이 그 집합과 교집합이면 매칭.
+- [ ] **동시 검색** — 요리명 조건과 재료 조건을 AND로 결합하는 API(또는 단일 엔드포인트에 `titleQuery` + `ingredientQuery` 옵션).
+- [ ] **Web** — `PLAN.md` 토글 UX(재료로 찾기 / 요리명으로 찾기) 및 신규 API 연동, 기존 필터·냉장고 플로우와 충돌 없게.
+- [ ] **통합·배포** — 기능 완료 후 `feature/recipe-search` → `develop` PR, 검증 뒤 `develop` → `main` 으로만 운영 반영.
+
 ## 기반 작업 (v1.5 기능과 병행·선행)
 
 - [x] **웹: API 베이스 URL을 env로** — `yoneodoo-web/src/App.jsx`의 Render 하드코딩을 `import.meta.env.VITE_API_BASE_URL`(또는 팀 합의 이름)으로 교체; `yoneodoo-web/README.md`에 문서화.

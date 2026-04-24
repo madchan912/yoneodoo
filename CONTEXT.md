@@ -22,6 +22,11 @@
 
 - **세션 시작 시 네 레포 pull 필수:** 에이전트를 새로 켜거나 프로젝트를 처음 연 뒤·다른 머신으로 옮긴 직후 작업을 시작하기 전에, **`yoneodoo-web`**, **`yoneodoo-api`**, **`yoneodoo-data`**, **멀티레포 루트(`02_Yoneodoo`)** 각각에서 `git pull`(또는 `git pull --rebase`)으로 원격과 맞출 것. 일괄 실행용 bash 예시는 `.cursorrules`를 참고한다.
 
+## 개발 가이드 (브랜치·배포)
+
+- **Render / Vercel**은 원격 **`main`** 브랜치를 감시해 **자동 배포**된다. 개발 중 코드가 바로 올라가면 운영이 불안정해질 수 있으므로, **일상 개발은 `develop`**, 기능 작업은 **`feature/*`**(예: `feature/recipe-search`)에서 진행한다. **배포가 필요할 때만** `develop` → `main`(또는 릴리스 PR)으로 합친다.
+- 네 레포(`yoneodoo-web`, `yoneodoo-api`, `yoneodoo-data`, 메타 루트) 모두 **동일한 브랜치 이름**을 맞추는 것을 권장한다. GitHub 저장소의 **기본 브랜치(default branch)**를 `develop`으로 바꾸는 것은 선택이며, 팀 합의 후 설정한다.
+
 ## API 표면 (현재)
 
 - `GET /api/v1/recipes` — 레시피 목록 (현재는 엔티티 그대로 노출되는 구간 있음)
