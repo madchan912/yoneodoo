@@ -15,7 +15,7 @@
 - [x] **API** — `ADMIN_SECRET` / `yoneodoo.admin.secret`, `AdminSecretAuthFilter`(`X-Admin-Secret`), `AdminController` 대시보드·레시피 목록·미분류(빈) API 뼈대.
 - [x] **Web** — `react-router-dom`, `/admin` 로그인(sessionStorage), `adminClient`, 사이드바·레시피 테이블·재료 매핑 UI 껍데기.
 - [ ] **운영 시크릿** — Render에 `ADMIN_SECRET` 설정, 주기적 로테이션 절차 문서화.
-- [ ] **미분류 재료** — DB/엔드포인트 연동 및 Admin UI 저장 동작.
+- [x] **미분류 재료** — `IngredientMapping` 엔티티, GET 미분류 / POST 매핑 API, Admin UI(체크박스·마스터명·저장 후 새로고침), 저장 후 `IngredientSearchService` 캐시 갱신.
 
 ## v1.5 — 요리명 검색 (UX + API)
 

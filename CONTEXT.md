@@ -29,7 +29,8 @@
 - `GET /api/v1/ingredients/search?keyword=` — 기동 시 레시피 JSON에서 뽑은 재료 **인메모리 캐시** 기반 검색
 - `GET /health` — 간단한 생존 확인 문자열
 - `/api/v1/fridge` — 유저 기반 냉장고 API 존재. **웹 v1**은「내 냉장고」를 **localStorage**로 처리하므로, 서버 냉장고는 현재 UX에서 선택 사항.
-- **Admin (`/api/v1/admin/**`)** — 헤더 `X-Admin-Secret`이 설정된 `ADMIN_SECRET`(Spring: `yoneodoo.admin.secret`)과 일치해야 통과. 예: `GET /api/v1/admin/dashboard/stats`, `GET /api/v1/admin/recipes?filter=`, `GET /api/v1/admin/ingredients/unclassified`. 미설정 시 해당 경로는 503.
+- **Admin (`/api/v1/admin/**`)** — 헤더 `X-Admin-Secret`이 설정된 `ADMIN_SECRET`(Spring: `yoneodoo.admin.secret`)과 일치해야 통과. 예: `GET /api/v1/admin/dashboard/stats`, `GET /api/v1/admin/recipes?filter=`, `GET /api/v1/admin/ingredients/unclassified`, `POST /api/v1/admin/ingredients/mapping`. 미설정 시 해당 경로는 503.
+- **`ingredient_mapping` 테이블** — `raw_name`(유니크), `master_name`: 레시피 JSON `ingredients[].name`에서 공백 제거한 키와 매칭. 미분류 = 레시피에 등장하는 정규화 이름 중 매핑에 없는 것.
 
 ## 웹 라우팅
 
