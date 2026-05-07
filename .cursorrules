@@ -28,3 +28,8 @@
 - Web: React 19 + Vite (VITE_ 변수 사용)
 - API: Java 21 + Spring Boot 4.x + Spring Data JPA (정확한 부트 버전은 yoneodoo-api/build.gradle 기준)
 - Data: Python + Ollama (Llama 3.1)
+
+4. 백엔드 도메인 주석 (Java / DB·데이터 흐름)
+- `yoneodoo-api`에서 **서비스·리포지토리·엔티티·(데이터 경로상의) 컨트롤러·DTO·관련 config**를 **생성하거나 public 동작을 변경**할 때는, 같은 작업 범위 안에서 **한글 Javadoc/주석을 추가·수정**할 것.
+- 목적: 초보 기획자도 **테이블(jsonb 포함)·적재 파이프라인·캐시 갱신 타이밍**을 코드만으로 따라갈 수 있게 한다.
+- 상세 규칙·예시 범위는 `.cursor/rules/java-domain-comments.mdc`를 따른다. (해당 규칙은 `yoneodoo-api/**/*.java` 작업 시 자동 적용)
