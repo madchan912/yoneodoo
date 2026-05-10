@@ -3,33 +3,29 @@
 1. 컨텍스트 유지 (Context Management)
 - 답변하거나 코드를 생성하기 전에 반드시 CONTEXT.md, PLAN.md, TASK.md를 먼저 읽고 현재 프로젝트의 진행 상태와 아키텍처를 파악할 것.
 - 작업 완료 후 소스 코드의 변경이나 계획의 변동이 있다면 위 3개 파일을 최신화할 것.
-- **에이전트를 새로 시작하거나, 프로젝트를 처음 연 뒤 작업을 시작할 때**는 원격과 어긋나지 않도록, 관련 Git 레포마다 **`git pull`(또는 `git pull --rebase`)을 먼저** 실행한 뒤 코드를 읽고 수정할 것. (yoneodoo-web, yoneodoo-api, yoneodoo-data, 멀티레포 메타 root)
+- 에이전트를 새로 시작하거나, 프로젝트를 처음 연 뒤 작업을 시작할 때는 원격과 어긋나지 않도록, 관련 Git 레포마다 `git pull`을 먼저 실행한 뒤 코드를 읽고 수정할 것.
 
 2. 레포지토리별 커밋·푸시용 bash (Git Commit / Push Rules)
-- 작업 완료 후, 변경이 있는 각 레포지토리(yoneodoo-web, yoneodoo-api, yoneodoo-data, 멀티레포 메타용 root)마다 **독립적인** `[type]: [description]` 형식 커밋 메시지를 제안할 것.
-- 해당 커밋에 `TASK.md`를 수정했다면 메시지 끝에 **`& TASK.md 업데이트`**를 붙일 것. (서브 레포에 TASK가 없으면 생략해도 됨.)
-- 사용자가 [Run]으로 바로 실행할 수 있도록, **레포별로 `cd` → `git add` → `git commit` → `git push`**까지 한 흐름으로 이어지는 **bash 코드 블록을 반드시** 제공할 것. 변경이 없는 레포는 해당 레포 구간을 생략하거나 주석으로 “변경 없음”을 적을 것.
-- **시작 시 동기화용 bash**도 필요하면 별도 블록으로 제공할 것: 각 레포에서 `git pull`만 수행하는 예시(아래 출력 예시 참고).
-
-- 출력 예시 (시작 시 — pull만):
-  ```bash
-  cd yoneodoo-web && git pull && cd ../yoneodoo-api && git pull && cd ../yoneodoo-data && git pull && cd .. && git pull
-  ```
-
+- 작업 완료 후, 변경이 있는 각 레포지토리마다 독립적인 `[type]: [description]` 형식 커밋 메시지를 제안할 것.
+- 해당 커밋에 TASK.md를 수정했다면 메시지 끝에 `& TASK.md 업데이트`를 붙일 것.
+- 사용자가 [Run]으로 바로 실행할 수 있도록, 레포별로 cd -> git add -> git commit -> git push 까지 한 흐름으로 이어지는 bash 코드를 반드시 제공할 것.
 - 출력 예시 (작업 후 — 커밋 + 푸시):
-  ```bash
   cd yoneodoo-web
   git add .
   git commit -m "feat: API 베이스 URL 환경변수 처리 & TASK.md 업데이트"
   git push
-  ```
 
 3. 기술 스택 가드레일 (Tech Stack)
 - Web: React 19 + Vite (VITE_ 변수 사용)
-- API: Java 21 + Spring Boot 4.x + Spring Data JPA (정확한 부트 버전은 yoneodoo-api/build.gradle 기준)
-- Data: Python + Ollama (Llama 3.1)
+- API: Java 21 + Spring Boot 3.x + Spring Data JPA
+- DB: PostgreSQL (로컬은 Docker 사용)
+- Data / AI: Python (유튜브 자막 크롤링 주력), Google Gemini 1.5 Flash API (데이터 추출, 레시피 가공, 재료 정규화 주력)
 
 4. 백엔드 도메인 주석 (Java / DB·데이터 흐름)
-- `yoneodoo-api`에서 **서비스·리포지토리·엔티티·(데이터 경로상의) 컨트롤러·DTO·관련 config**를 **생성하거나 public 동작을 변경**할 때는, 같은 작업 범위 안에서 **한글 Javadoc/주석을 추가·수정**할 것.
-- 목적: 초보 기획자도 **테이블(jsonb 포함)·적재 파이프라인·캐시 갱신 타이밍**을 코드만으로 따라갈 수 있게 한다.
-- 상세 규칙·예시 범위는 `.cursor/rules/java-domain-comments.mdc`를 따른다. (해당 규칙은 `yoneodoo-api/**/*.java` 작업 시 자동 적용)
+- yoneodoo-api에서 서비스·리포지토리·엔티티·컨트롤러·DTO를 생성하거나 public 동작을 변경할 때는, 같은 작업 범위 안에서 한글 Javadoc/주석을 추가·수정할 것.
+- 목적: 초보 기획자도 테이블, 적재 파이프라인, 캐시 갱신 타이밍을 코드만으로 따라갈 수 있게 한다.
+- 상세 규칙은 .cursor/rules/java-domain-comments.mdc를 따른다.
+
+5. [중요] 보안 및 로컬 환경변수 (Security & Environment)
+- .env, .env.local, application-local.yaml, .env.sync 등 로컬 전용 비밀키와 DB 접속 정보가 담긴 파일은 절대로 git add . 명령에 포함시키거나 커밋하지 말 것.
+- 해당 설정 파일들의 코드를 생성하거나 수정했을 경우, 사용자에게 "이 파일은 Git에 추적되지 않으므로 다른 환경(맥북 등)에서 수동으로 동기화해야 합니다"라고 반드시 안내할 것.
