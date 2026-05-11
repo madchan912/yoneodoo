@@ -24,8 +24,12 @@
 - [ ] **AI 반자동 매핑 (Human-in-the-Loop)**:
   - **API**: `POST /api/v1/admin/ingredients/suggest` 엔드포인트 생성 및 Gemini 1.5 Flash API 연동.
   - **Web**: 미분류 목록 상단에 [✨ AI 매핑 추천] 버튼 추가, 응답받은 마스터명을 입력창에 자동 채움.
-- [ ] **어드민 레시피 수정 기능 (CRUD)**:
-  - 어드민 화면에서 개별 레시피의 '요리명', '재료 및 분량'을 직접 수정하고 저장할 수 있는 기능 추가 (밀가루면 사태 방지용).
+- [x] **어드민 레시피 수정 기능 (CRUD)**:
+  - API: `GET /api/v1/admin/recipes/{id}`, `PUT /api/v1/admin/recipes/{id}` (요리명·유튜브 URL·재료 배열 수정, 저장 후 검색 캐시 자동 갱신).
+  - Web: 레시피 관리 표에서 [수정] 버튼 → 모달에서 제목·링크·재료(이름·분량) 편집 후 저장.
+- [x] **어드민 태스크 보드 (로드맵)**:
+  - API: `GET /api/v1/admin/tasks` — 프로젝트 루트의 `TASK.md` 원문을 그대로 반환 (시스템 프로퍼티 `yoneodoo.task.markdownPath` 또는 환경변수 `YONEODOO_TASK_MD_PATH` 로 경로 오버라이드 가능).
+  - Web: 사이드바 [대시보드 / 로드맵] 메뉴, `react-markdown` + `remark-gfm` 으로 체크박스·표 포함 렌더.
 - [ ] **초기 데이터 벌크 적재**:
   - 맥북/데스크톱 로컬 환경에서 파이썬 크롤러를 구동하여 레시피 2,000~3,000개 수집 후 운영 DB로 다이렉트 이식.
 
