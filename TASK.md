@@ -27,6 +27,11 @@
 - [x] **어드민 레시피 수정 기능 (CRUD)**:
   - API: `GET /api/v1/admin/recipes/{id}`, `PUT /api/v1/admin/recipes/{id}` (요리명·유튜브 URL·재료 배열 수정, 저장 후 검색 캐시 자동 갱신).
   - Web: 레시피 관리 표에서 [수정] 버튼 → 모달에서 제목·링크·재료(이름·분량) 편집 후 저장.
+- [x] **레시피 Soft Delete (displayStatus 도입)**:
+  - DB/Entity: `Recipe.displayStatus` 컬럼(enum `ACTIVE`/`HIDDEN`, 기본값 `ACTIVE`) 추가. 기존 파이프라인 `status`와 의미 분리.
+  - API: `PUT /api/v1/admin/recipes/{id}` 에서 `displayStatus` 변경 가능. 사용자용 `GET /api/v1/recipes`, `IngredientSearchService` 캐시는 `ACTIVE` 만 노출. 어드민 목록은 두 상태 모두 표시.
+  - Web: `RecipeEditModal` 에 [노출/숨김] 토글 추가 + `youtubeUrl` 읽기 전용 처리. `RecipeManagePage` 행에 노출 상태 뱃지.
+- [x] **태스크 보드 가독성 개선**: `TaskBoardPage` 마크다운 본문 대비 강화 + 체크박스 라이트 컬러스킴 강제(`color-scheme: light`)로 다크 톤에서도 또렷하게 보이게.
 - [x] **어드민 태스크 보드 (로드맵)**:
   - API: `GET /api/v1/admin/tasks` — 프로젝트 루트의 `TASK.md` 원문을 그대로 반환 (시스템 프로퍼티 `yoneodoo.task.markdownPath` 또는 환경변수 `YONEODOO_TASK_MD_PATH` 로 경로 오버라이드 가능).
   - Web: 사이드바 [대시보드 / 로드맵] 메뉴, `react-markdown` + `remark-gfm` 으로 체크박스·표 포함 렌더.
