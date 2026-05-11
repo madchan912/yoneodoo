@@ -21,12 +21,12 @@
 ## 🤖 어드민 고도화 및 AI 정규화 (v1.5)
 
 - [x] **어드민 로그인 & 미분류 재료 UI**: 시크릿 기반 로그인, 재료 매핑/해제 리스트 UI 및 API 구축.
-- [ ] **AI 반자동 매핑 (Human-in-the-Loop)**:
-  - **API**: `POST /api/v1/admin/ingredients/suggest` 엔드포인트 생성 및 Gemini 1.5 Flash API 연동.
-  - **Web**: 미분류 목록 상단에 [✨ AI 매핑 추천] 버튼 추가, 응답받은 마스터명을 입력창에 자동 채움.
+- [x] **AI 반자동 매핑 (Human-in-the-Loop)**:
+  - **API**: `POST /api/v1/admin/ingredients/suggest` 엔드포인트 + `GeminiProperties`/`IngredientSuggestionService` 도입. `gemini-1.5-flash` 호출, JSON 응답 (`{"masterName":"..."}`) 보수적 파싱. 키 미설정 503, 외부 4xx/5xx 502, 타임아웃 504.
+  - **Web**: 미분류 목록 상단 [✨ AI 매핑 추천] 버튼 → 체크된 재료들을 보내 추천값을 마스터명 입력창에 자동 입력만 함(저장은 사람이 직접 [매핑 저장] 확정).
 - [x] **어드민 레시피 수정 기능 (CRUD)**:
-  - API: `GET /api/v1/admin/recipes/{id}`, `PUT /api/v1/admin/recipes/{id}` (요리명·유튜브 URL·재료 배열 수정, 저장 후 검색 캐시 자동 갱신).
-  - Web: 레시피 관리 표에서 [수정] 버튼 → 모달에서 제목·링크·재료(이름·분량) 편집 후 저장.
+  - API: `GET /api/v1/admin/recipes/{id}`, `PUT /api/v1/admin/recipes/{id}` (요리명·유튜브 URL·재료 배열·displayStatus·**status**(파이프라인 코드 수동 보강) 수정, 저장 후 검색 캐시 자동 갱신).
+  - Web: 레시피 관리 표에서 [수정] 버튼 → 모달에서 제목·재료·노출 토글·**status 드롭다운/[✓ SUCCESS 로 승급] 버튼**·유튜브 새창/복사까지 한 화면에서 처리.
 - [x] **레시피 Soft Delete (displayStatus 도입)**:
   - DB/Entity: `Recipe.displayStatus` 컬럼(enum `ACTIVE`/`HIDDEN`, 기본값 `ACTIVE`) 추가. 기존 파이프라인 `status`와 의미 분리.
   - API: `PUT /api/v1/admin/recipes/{id}` 에서 `displayStatus` 변경 가능. 사용자용 `GET /api/v1/recipes`, `IngredientSearchService` 캐시는 `ACTIVE` 만 노출. 어드민 목록은 두 상태 모두 표시.
