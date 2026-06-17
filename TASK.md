@@ -10,17 +10,26 @@
 - [ ] **로컬 환경 동기화 (Mac ↔ Win)**: 
   - `.gitignore` 처리된 비밀 파일(`application-local.yaml`, `.env` 등) 맥북으로 이식.
   - 프론트 `npm install` 및 백엔드 로컬 DB 구동 확인.
-- [ ] **운영 서버 업그레이드 (Render)**:
-  - 백엔드 서버를 Starter 플랜($7/월)으로 업그레이드하여 24시간 가동 및 속도 확보.
-  - 기존 5분 단위 헬스체크(Ping) 봇 스케줄러 해지.
+- [x] **AWS 인프라 구축 완료 (2026-06-17)**:
+  - IAM 사용자 `yoneodoo-admin` 생성 (최소 권한).
+  - 보안 그룹 `yoneodoo-ec2-sg`(HTTP/SSH), `yoneodoo-rds-sg`(EC2→RDS 5432) 생성.
+  - RDS PostgreSQL `yoneodoo-db` 생성 (ap-northeast-2, db.t3.micro) + Neon → RDS 데이터 이전 완료.
+  - EC2 `yoneodoo-api` 생성 (t3.micro, Ubuntu) — Docker + Spring Boot 백엔드, Nginx + React 프론트 통합 배포.
+  - 현재 **http://43.201.95.155** 에서 서비스 중.
+- [ ] **구 인프라 정리**:
+  - Render 서비스 삭제 (백엔드).
+  - Neon DB 삭제 (데이터 이전 완료 확인 후).
+  - Vercel 프로젝트 삭제 또는 EC2 도메인으로 리다이렉트.
 - [ ] **커스텀 도메인 연결**:
-  - 가비아/호스팅케이알 등에서 `.kr` 또는 `.com` 도메인 구매 후 Vercel 연동.
+  - 가비아/호스팅케이알 등에서 `.kr` 또는 `.com` 도메인 구매 후 EC2 Nginx 연동.
+  - HTTPS 인증서 발급 (Let's Encrypt / Certbot).
 
 ---
 
 ## 🤖 어드민 고도화 및 AI 정규화 (v1.5)
 
 - [x] **어드민 로그인 & 미분류 재료 UI**: 시크릿 기반 로그인, 재료 매핑/해제 리스트 UI 및 API 구축.
+- [x] **재료 정규화 페이지 JSON 그룹핑 붙여넣기 (2026-06-17)**: `IngredientNormalizePage.jsx` — JSON 텍스트 붙여넣기 → 재료 그룹 일괄 파싱·승인 모달 흐름 추가.
 - [x] **AI 반자동 매핑 (Human-in-the-Loop)**:
   - **API**: `POST /api/v1/admin/ingredients/suggest` 엔드포인트 + `GeminiProperties`/`IngredientSuggestionService` 도입. `gemini-1.5-flash` 호출, JSON 응답 (`{"masterName":"..."}`) 보수적 파싱. 키 미설정 503, 외부 4xx/5xx 502, 타임아웃 504.
   - **Web**: 미분류 목록 상단 [✨ AI 매핑 추천] 버튼 → 체크된 재료들을 보내 추천값을 마스터명 입력창에 자동 입력만 함(저장은 사람이 직접 [매핑 저장] 확정).
@@ -40,9 +49,9 @@
 
 ---
 
-## 🔍 사용자 검색 UX (feature/recipe-search)
+## 🔍 사용자 검색 UX (미착수)
 
-현재 `develop`에서 분기한 `feature/recipe-search` 브랜치에서 진행.
+착수 시 `develop`에서 `feature/recipe-search` 브랜치를 새로 생성하여 진행. (이전 동명 브랜치는 remote에서 삭제됨)
 
 - [ ] **요리명 검색 API**: `recipes.title` 기준 `ILIKE` 또는 전문 검색(`tsvector`) 구현.
 - [ ] **재료 검색 동기화**: 사용자 키워드 -> `ingredient_mapping` 마스터명 조회 -> 묶인 모든 raw_name 교집합으로 레시피 매칭.

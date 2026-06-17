@@ -5,7 +5,8 @@
 ## 제품
 
 - **요너두**: 냉장고 재료 기반으로 유튜브 요리를 찾아주는 AI 보조 서비스. 재료 매칭, 영상 노출, 단순한「내 냉장고」UX.
-- **라이브**: [yoneodoo.vercel.app](https://yoneodoo.vercel.app/) (기획·로드맵 서사는 루트 `README.md` 참고)
+- **라이브**: http://43.201.95.155 (AWS EC2 Nginx로 서빙 중 — 2026-06-17 이전 완료. 도메인 연결 전 임시 IP)
+- **구버전(예정 폐기)**: Vercel(프론트), Render(백엔드), Neon(DB) — 아직 미삭제, 정리 예정.
 
 ## 레포 구성 (멀티 레포 / MSA 스타일)
 
@@ -24,8 +25,12 @@
 
 ## 개발 가이드 (브랜치·배포)
 
-- **Render / Vercel**은 원격 **`main`** 브랜치를 감시해 **자동 배포**된다. 개발 중 코드가 바로 올라가면 운영이 불안정해질 수 있으므로, **일상 개발은 `develop`**, 기능 작업은 **`feature/*`**(예: `feature/recipe-search`)에서 진행한다. **배포가 필요할 때만** `develop` → `main`(또는 릴리스 PR)으로 합친다.
-- 네 레포(`yoneodoo-web`, `yoneodoo-api`, `yoneodoo-data`, 메타 루트) 모두 **동일한 브랜치 이름**을 맞추는 것을 권장한다. GitHub 저장소의 **기본 브랜치(default branch)**를 `develop`으로 바꾸는 것은 선택이며, 팀 합의 후 설정한다.
+- **AWS EC2**에 직접 배포하는 방식으로 전환 (2026-06-17). Render/Vercel 자동 배포는 더 이상 사용하지 않는다.
+  - **프론트엔드**: EC2 위 Nginx가 `yoneodoo-web` 빌드 산출물(`dist/`)을 서빙.
+  - **백엔드**: EC2 위 Docker 컨테이너로 Spring Boot 실행.
+  - **DB**: AWS RDS PostgreSQL (`yoneodoo-db`, `ap-northeast-2`).
+- **일상 개발은 `develop`**, 기능 작업은 **`feature/*`**(예: `feature/recipe-search`)에서 진행한다. **배포가 필요할 때만** EC2에 수동(또는 스크립트)으로 반영한다.
+- 네 레포(`yoneodoo-web`, `yoneodoo-api`, `yoneodoo-data`, 메타 루트) 모두 **동일한 브랜치 이름**을 맞추는 것을 권장한다.
 
 ## API 표면 (현재)
 
@@ -53,7 +58,20 @@
 - API: `application.yaml`에서 기본 프로필 `local`; DB는 `application-local.yaml` / `application-prod.yaml`. 운영은 `DB_URL`, `DB_USER`, `DB_PASSWORD`. **어드민**은 환경변수 `ADMIN_SECRET`(YAML `yoneodoo.admin.secret`) — 로컬 기본값은 `application-local.yaml` 참고.
 - 웹은 **`VITE_API_BASE_URL`** 로 API 오리진 설정 (Vite).
 - **환경 파일:** `yoneodoo-web`은 `.env` / `.env.*`를 Git에서 제외하고 **`.env.example`만** 추적한다. `yoneodoo-data`도 `.gitignore`에 `.env`가 있다.
+- **DB**: AWS RDS PostgreSQL (`yoneodoo-db`, `ap-northeast-2`, 프리 티어 `db.t3.micro`). Neon에서 이전 완료(2026-06-17). 운영 DB 접속 정보는 EC2 내 환경변수 및 `application-prod.yaml` 참고.
 - **DB 동기화(수동):** `yoneodoo-api/scripts/sync_prod_to_local_db.py` — 운영(SOURCE) `pg_dump` → 로컬(TARGET) `pg_restore`. 접속 정보는 `scripts/.env.sync`(비밀·Git 제외) 또는 `--env-file`.
+
+## 인프라 현황 (2026-06-17 기준)
+
+| 구성 요소 | 서비스 | 세부 정보 |
+|-----------|--------|-----------|
+| EC2 | AWS ap-northeast-2 | `yoneodoo-api`, t3.micro, Ubuntu — 백엔드(Docker) + 프론트(Nginx) 통합 |
+| RDS | AWS ap-northeast-2 | `yoneodoo-db`, PostgreSQL, db.t3.micro — Neon 데이터 이전 완료 |
+| IAM | AWS | `yoneodoo-admin` 사용자, 최소 권한 |
+| 보안 그룹 | AWS | `yoneodoo-ec2-sg`(HTTP/SSH), `yoneodoo-rds-sg`(EC2 → RDS 5432) |
+| 서비스 URL | — | http://43.201.95.155 (도메인 연결 전 임시) |
+| Render | 폐기 예정 | 미삭제 상태 — 정리 필요 |
+| Neon | 폐기 예정 | 미삭제 상태 — 정리 필요 |
 
 ## 알려진 기술 부채 (v1)
 
