@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C /Users/madchan/Workspace/10_Projects/02_Yoneodoo/yoneodoo-web pull --rebase)",
+      "Bash(git -C /Users/madchan/Workspace/10_Projects/02_Yoneodoo/yoneodoo-api pull --rebase)",
+      "Bash(git -C /Users/madchan/Workspace/10_Projects/02_Yoneodoo/yoneodoo-web diff --stat)",
+      "Bash(git -C /Users/madchan/Workspace/10_Projects/02_Yoneodoo/yoneodoo-web add src/admin/IngredientNormalizePage.jsx)",
+      "Bash(git -C /Users/madchan/Workspace/10_Projects/02_Yoneodoo/yoneodoo-web commit -m ' *)",
+      "Bash(git -C /Users/madchan/Workspace/10_Projects/02_Yoneodoo/yoneodoo-web push)",
+      "Bash(git -C /Users/madchan/Workspace/10_Projects/02_Yoneodoo/yoneodoo-data pull --rebase)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(./mvnw compile *)",
+      "Bash(./gradlew compileJava)",
+      "Bash(chmod +x /Users/madchan/Workspace/10_Projects/02_Yoneodoo/yoneodoo-api/gradlew)",
+      "Bash(git stash *)",
+      "Bash(git checkout *)",
+      "Bash(git pull *)",
+      "Bash(git merge *)",
+      "Bash(gh run *)",
+      "Bash(brew list *)"
+    ]
+  }
+}
