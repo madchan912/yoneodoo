@@ -64,7 +64,7 @@ git push
 
 - **Web**: React 19 + Vite — 환경변수는 `VITE_` 접두사 사용
 - **API**: Java 21 + Spring Boot 3.x + Spring Data JPA
-- **DB**: PostgreSQL (로컬은 Docker, 운영은 Render)
+- **DB**: PostgreSQL (로컬은 Docker, 운영은 AWS RDS)
 - **Data / AI**: Python 크롤러 + 로컬 Ollama/Llama3.1 (레시피 추출·재료 정규화 메인), Google Gemini API gemini-2.5-flash (추후 자동화 배치용)
 
 ---
