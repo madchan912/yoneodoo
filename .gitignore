@@ -1,5 +1,6 @@
 .env
 .DS_Store
+.vscode/
 yoneodoo-api/
 yoneodoo-data/
 yoneodoo-web/
