@@ -17,6 +17,18 @@
   - Trigger C: 재료 매핑 저장 (`saveIngredientMappings` / `bulkSaveIngredientMappings`) 후 관련 레시피 재평가.
   - 종료 상태(NO_SUBTITLES·FAILED·SKIP)는 덮어쓰지 않음.
   - 미리보기 모달 각 레시피 카드에 [✏️ 수정] 버튼 추가 — RecipeEditModal을 zIndex=11000으로 열고, 저장 후 미리보기 목록 자동 재조회.
+- [x] **레시피 수정 모달에 transcript(자막) 표시**:
+  - RecipeEditModal에 transcript 필드 읽기 전용으로 추가
+  - 자막 없으면 "자막 없음" 표시
+  - 접기/펼치기 토글로 UI 깔끔하게
+- [ ] **레시피 관리 페이지 정렬/필터 기능**:
+  - 기본 정렬: ID 기준
+  - 정렬 옵션: ID, 노출 상태(displayStatus), 파이프라인 상태(status), 유튜버명
+  - 필터 옵션: 노출 여부(ACTIVE/HIDDEN), 파이프라인 상태(SUCCESS/PENDING 등), 유튜버명
+- [ ] **레시피 수정 이력 추적 (updated_at 컬럼 추가)**:
+  - recipes 테이블에 updated_at 컬럼 추가
+  - JPA @UpdateTimestamp로 수정 시 자동 갱신
+  - DB 마이그레이션 스크립트 작성
 - [ ] **데스크탑 `.env.sync` RDS 정보로 업데이트**:
   - `SYNC_SOURCE_HOST=yoneodoo-db.cvgskwe4mv95.ap-northeast-2.rds.amazonaws.com` 반영.
   - (맥북은 이미 완료, 데스크탑만 잔여)
