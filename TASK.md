@@ -10,9 +10,13 @@
 - [ ] **재료 정규화 완료 (약 87개 잔여)**:
   - `ingredient_mapping` 미매핑 raw_name 영상 확인 후 마스터명 확정.
   - 어드민 AI 그룹핑(`/bulk-grouping`) + 수동 확인 병행.
-- [ ] **PENDING 로직 구현**:
-  - 미분류 재료 포함 레시피 자동 `PENDING` 처리 (파이프라인 적재 시 또는 배치).
-  - 해당 raw_name 매핑 완료 시 레시피 자동 `ACTIVE` 전환.
+- [x] **PENDING 로직 구현**:
+  - `RecipeService.checkAndUpdateRecipeStatus(Recipe)` 공통 메서드 추출.
+  - Trigger A: 크롤러 적재 (`RecipeService.saveRecipe`) 후 자동 평가.
+  - Trigger B: 어드민 레시피 수정 (`AdminService.updateRecipe`) 후 자동 평가.
+  - Trigger C: 재료 매핑 저장 (`saveIngredientMappings` / `bulkSaveIngredientMappings`) 후 관련 레시피 재평가.
+  - 종료 상태(NO_SUBTITLES·FAILED·SKIP)는 덮어쓰지 않음.
+  - 미리보기 모달 각 레시피 카드에 [✏️ 수정] 버튼 추가 — RecipeEditModal을 zIndex=11000으로 열고, 저장 후 미리보기 목록 자동 재조회.
 - [ ] **데스크탑 `.env.sync` RDS 정보로 업데이트**:
   - `SYNC_SOURCE_HOST=yoneodoo-db.cvgskwe4mv95.ap-northeast-2.rds.amazonaws.com` 반영.
   - (맥북은 이미 완료, 데스크탑만 잔여)
