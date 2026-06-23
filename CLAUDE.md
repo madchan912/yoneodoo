@@ -12,7 +12,7 @@ Claude Code가 이 프로젝트에서 작동할 때 따르는 규칙입니다.
 | 폴더 | 역할 | 주요 스택 |
 |------|------|-----------|
 | `yoneodoo-web` | 사용자 UI | React 19, Vite, axios |
-| `yoneodoo-api` | REST API / 비즈니스 로직 | Java 21, Spring Boot 3.x, Spring Data JPA, PostgreSQL |
+| `yoneodoo-api` | REST API / 비즈니스 로직 | Java 21, Spring Boot 4.x, Spring Data JPA, PostgreSQL |
 | `yoneodoo-data` | 크롤링·LLM → API 적재 파이프라인 | Python, Ollama/Llama3.1, Gemini API, youtube-transcript |
 | 루트 (`02_Yoneodoo`) | 메타 문서 / 공통 설정 | — |
 
@@ -63,7 +63,7 @@ git push
 ## 4. 기술 스택 가드레일
 
 - **Web**: React 19 + Vite — 환경변수는 `VITE_` 접두사 사용
-- **API**: Java 21 + Spring Boot 3.x + Spring Data JPA
+- **API**: Java 21 + Spring Boot 4.x + Spring Data JPA
 - **DB**: PostgreSQL (로컬은 Docker, 운영은 AWS RDS)
 - **Data / AI**: Python 크롤러 + 로컬 Ollama/Llama3.1 (레시피 추출·재료 정규화 메인), Google Gemini API gemini-2.5-flash (추후 자동화 배치용)
 
