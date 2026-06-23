@@ -47,6 +47,7 @@
   - `GET /api/v1/admin/recipes`, `GET /api/v1/admin/recipes/{id}`, `PUT /api/v1/admin/recipes/{id}` — 레시피 CRUD
   - `GET /api/v1/admin/ingredients/unclassified` — 미분류 재료 목록
   - `POST /api/v1/admin/ingredients/mapping` — 재료 매핑 저장
+  - `GET /api/v1/admin/ingredients/mapped-names` — 매핑된 재료 raw_name 전체 목록 (`List<String>`, RecipeEditModal 미매핑 표기용)
   - `POST /api/v1/admin/ingredients/suggest` — Gemini AI 단건 마스터명 추천
   - `POST /api/v1/admin/ingredients/bulk-grouping` — Gemini AI 전체 미분류 그룹핑 (청크 50개씩)
   - `POST /api/v1/admin/ingredients/bulk-map` — AI 그룹핑 결과 일괄 매핑 저장
@@ -59,7 +60,7 @@
 
 ## 저장 모델 (현재)
 
-- **Recipe**: JPA 엔티티, `ingredients`는 JSON 리스트(`RecipeIngredientData`: `name`, `amount`), `videoId`, `status`, `displayStatus`(Soft Delete), `transcript`, `youtuberName` 등. **사용자 응답은 `RecipeResponse` DTO로 분리** (`status`/`displayStatus`/`transcript` 미포함).
+- **Recipe**: JPA 엔티티, `ingredients`는 JSON 리스트(`RecipeIngredientData`: `name`, `amount`), `videoId`, `status`, `displayStatus`(Soft Delete), `transcript`, `youtuberName`, `createdAt`, `updatedAt`(`@UpdateTimestamp` 자동 갱신) 등. **사용자 응답은 `RecipeResponse` DTO로 분리** (`status`/`displayStatus`/`transcript` 미포함, `updatedAt` 포함).
 - **User**: 소셜 필드 + `fridgeIngredients` JSON 문자열 리스트 (향후 계정·냉장고 동기화).
 - **IngredientMapping**: `raw_name`(유니크), `master_name` — 재료 정규화 핵심 테이블.
 
@@ -70,7 +71,7 @@
 - **CORS**: `CorsConfig.java`에서 전역 관리. 허용 오리진: `http://localhost:5173`, `http://43.201.95.155`.
 - **환경 파일:** `yoneodoo-web`은 `.env` / `.env.*`를 Git에서 제외. `scripts/.env.sync`도 Git 제외(비밀).
 - **DB**: AWS RDS PostgreSQL (`yoneodoo-db`, `yoneodoo-db.cvgskwe4mv95.ap-northeast-2.rds.amazonaws.com`, db.t3.micro). Neon에서 이전 완료(2026-06-17).
-- **DB 동기화(수동):** `yoneodoo-api/scripts/sync_prod_to_local_db.py` — 운영(RDS) `pg_dump` → 로컬 `pg_restore`. 접속 정보는 `scripts/.env.sync`(Git 제외).
+- **DB 동기화(수동):** `yoneodoo-api/scripts/sync_prod_to_local_db.py` — Docker 기반으로 운영(RDS) `pg_dump` → 로컬 `pg_restore`. pg_dump/pg_restore는 `SYNC_PG_IMAGE`(기본 `postgres:16`) Docker 컨테이너 안에서 실행하므로 로컬에 PostgreSQL 바이너리 불필요. 접속 정보는 `scripts/.env.sync`(Git 제외, `SYNC_DOCKER_CONTAINER`, `SYNC_PG_IMAGE` 포함).
 
 ## 인프라 현황 (2026-06-22 기준)
 
@@ -90,7 +91,7 @@
 ## 알려진 기술 부채 (v1.5 잔여)
 
 1. **재료 정규화 미완**: `ingredient_mapping` 미완료 raw_name 약 87개 잔여 — 영상 확인 후 마스터명 확정 필요.
-2. **PENDING 로직 미구현**: 미분류 재료 포함 레시피 자동 PENDING 처리, 정규화 완료 시 자동 ACTIVE 전환 로직 없음.
+2. **운영 DB 마이그레이션 미실행**: `scripts/migrate_add_updated_at.sql` (updated_at 컬럼 추가)을 운영 RDS에 아직 적용하지 않음.
 3. **거대 단일 UI**: 로직 대부분이 `App.jsx`에 집중 → 컴포넌트 분리 필요.
 4. **캐시 갱신 연동 부분 미완**: 레시피 저장 후 `IngredientSearchService.initCache()` 자동 갱신 연동 확인 필요.
 5. **검증·에러**: Bean Validation 최소; 계약 안정화 시 `@ControllerAdvice` 고도화 검토.
@@ -108,4 +109,4 @@
 
 ---
 
-*내부 논의 기준으로 정리됨: v1.5 재료 정규화 마무리 → PENDING 로직 → 도메인/HTTPS 순으로 진행 예정.*
+*내부 논의 기준으로 정리됨: v1.5 재료 정규화 마무리 → 운영 DB 마이그레이션 → 도메인/HTTPS(v1.9) 순으로 진행 예정.*

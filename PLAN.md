@@ -23,6 +23,11 @@
     * 레시피 관리 CRUD (검색·status 연동·displayStatus Soft Delete).
     * 재료 정규화 UI: 미분류 재료 목록, 매핑/해제, JSON 그룹핑 일괄 승인 모달.
     * Gemini AI 연동: 단건 AI 추천(`/suggest`) + 전체 미분류 AI 그룹핑(`/bulk-grouping`).
+    * PENDING 로직: `RecipeService.checkAndUpdateRecipeStatus()` — 크롤러 적재·어드민 수정·매핑 저장 3곳에서 자동 평가, 종료 상태(NO_SUBTITLES·FAILED·SKIP) 보호.
+    * RecipeEditModal 좌우 분할 레이아웃 (자막 읽기전용 좌측, 재료 편집 우측, 1100px).
+    * RecipeEditModal 미매핑 재료 표기: `GET /api/v1/admin/ingredients/mapped-names` 연동, 빨간 테두리 + ⚠ 배지.
+    * RecipeManagePage 정렬·필터: ID/노출상태/파이프라인/유튜버 정렬, 노출·상태·유튜버 필터 드롭다운.
+    * IngredientNormalizePage 저장 후 미분류 목록 자동 갱신.
 
 * **사용자 검색** ✅
     * 요리명 서버사이드 검색 API (`JPQL ILIKE`).
@@ -31,13 +36,17 @@
 
 * **기술 부채 정리** ✅
     * CORS 전역 통합 (`CorsConfig.java`).
-    * `RecipeResponse` DTO 도입 (엔티티 직접 노출 제거).
+    * `RecipeResponse` DTO 도입 (`updatedAt` 포함, 엔티티 직접 노출 제거).
     * 전역 예외처리 `GlobalExceptionHandler` 추가.
     * Gemini 응답 파싱 오류 수정 (`body(String.class)` + `readTree()`).
+    * `recipes.updated_at` 컬럼 추가 (`@UpdateTimestamp`, 운영 RDS 마이그레이션 스크립트 `migrate_add_updated_at.sql`).
+    * `sync_prod_to_local_db.py` Docker 지원 — pg_dump/pg_restore를 Docker 컨테이너 안에서 실행, `--network container:<name>` 방식으로 버전 불일치 해결.
+    * `yoneodoo-api/.gitignore` Python 캐시 파일 추가.
 
 * **잔여 작업** ⏳
     * 재료 정규화 마무리 (약 87개 raw_name, 영상 확인 후 마스터명 확정).
-    * PENDING 로직: 미분류 재료 포함 레시피 자동 PENDING 처리, 정규화 완료 시 자동 ACTIVE 전환.
+    * 운영 RDS `updated_at` 마이그레이션 실행 (`scripts/migrate_add_updated_at.sql`).
+    * 맥북 `.env.sync` RDS/Docker 접속 정보 업데이트.
 
 ---
 

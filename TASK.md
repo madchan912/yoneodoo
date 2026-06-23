@@ -10,28 +10,12 @@
 - [ ] **재료 정규화 완료 (약 87개 잔여)**:
   - `ingredient_mapping` 미매핑 raw_name 영상 확인 후 마스터명 확정.
   - 어드민 AI 그룹핑(`/bulk-grouping`) + 수동 확인 병행.
-- [x] **PENDING 로직 구현**:
-  - `RecipeService.checkAndUpdateRecipeStatus(Recipe)` 공통 메서드 추출.
-  - Trigger A: 크롤러 적재 (`RecipeService.saveRecipe`) 후 자동 평가.
-  - Trigger B: 어드민 레시피 수정 (`AdminService.updateRecipe`) 후 자동 평가.
-  - Trigger C: 재료 매핑 저장 (`saveIngredientMappings` / `bulkSaveIngredientMappings`) 후 관련 레시피 재평가.
-  - 종료 상태(NO_SUBTITLES·FAILED·SKIP)는 덮어쓰지 않음.
-  - 미리보기 모달 각 레시피 카드에 [✏️ 수정] 버튼 추가 — RecipeEditModal을 zIndex=11000으로 열고, 저장 후 미리보기 목록 자동 재조회.
-- [x] **레시피 수정 모달에 transcript(자막) 표시**:
-  - RecipeEditModal에 transcript 필드 읽기 전용으로 추가
-  - 자막 없으면 "자막 없음" 표시
-  - 접기/펼치기 토글로 UI 깔끔하게
-- [ ] **레시피 관리 페이지 정렬/필터 기능**:
-  - 기본 정렬: ID 기준
-  - 정렬 옵션: ID, 노출 상태(displayStatus), 파이프라인 상태(status), 유튜버명
-  - 필터 옵션: 노출 여부(ACTIVE/HIDDEN), 파이프라인 상태(SUCCESS/PENDING 등), 유튜버명
-- [ ] **레시피 수정 이력 추적 (updated_at 컬럼 추가)**:
-  - recipes 테이블에 updated_at 컬럼 추가
-  - JPA @UpdateTimestamp로 수정 시 자동 갱신
-  - DB 마이그레이션 스크립트 작성
-- [ ] **데스크탑 `.env.sync` RDS 정보로 업데이트**:
-  - `SYNC_SOURCE_HOST=yoneodoo-db.cvgskwe4mv95.ap-northeast-2.rds.amazonaws.com` 반영.
-  - (맥북은 이미 완료, 데스크탑만 잔여)
+- [ ] **운영 RDS `updated_at` 마이그레이션 실행**:
+  - `scripts/migrate_add_updated_at.sql` 을 운영 RDS에 적용.
+  - 실행 전 pg_dump 백업 필수.
+- [ ] **맥북 `.env.sync` 접속 정보 업데이트**:
+  - `SYNC_SOURCE_HOST`, `SYNC_DOCKER_CONTAINER`, `SYNC_PG_IMAGE` 등 동기화.
+  - (데스크탑은 완료)
 
 ---
 
@@ -41,7 +25,7 @@
 - [x] **AWS 인프라 구축 (2026-06-17)**: EC2(t3.micro, Ubuntu) + RDS PostgreSQL(`yoneodoo-db`, ap-northeast-2) 전환.
 - [x] **GitHub Actions CI/CD (2026-06-22)**: main 브랜치 push → API Docker rebuild + Web Nginx 자동 배포.
 - [x] **구 인프라 삭제 완료 (2026-06-22)**: Render(백엔드), Neon(DB), Vercel(프론트) 전부 삭제.
-- [x] **로컬 DB 동기화 스크립트**: `scripts/sync_prod_to_local_db.py` + `.env.sync` (RDS 정보 반영).
+- [x] **로컬 DB 동기화 스크립트 Docker 지원**: `scripts/sync_prod_to_local_db.py` Docker 기반 재작성 — pg_dump/pg_restore를 `SYNC_PG_IMAGE` 컨테이너에서 실행, `--network container:<name>` 방식으로 버전 불일치 해결.
 
 ### 어드민 고도화
 - [x] **어드민 로그인 & 기본 UI**: 시크릿 기반 인증, 대시보드, 미분류 재료 목록.
@@ -54,6 +38,25 @@
 - [x] **레시피 Soft Delete**: `displayStatus` 컬럼(`ACTIVE`/`HIDDEN`) 추가, 어드민 토글 UI.
 - [x] **미분류 재료 포함 레시피 75개 HIDDEN 처리 (2026-06-22)**.
 - [x] **태스크 보드 가독성 개선**: 마크다운 렌더링, 체크박스 라이트 컬러스킴.
+- [x] **PENDING 로직 구현**:
+  - `RecipeService.checkAndUpdateRecipeStatus(Recipe)` 공통 메서드 추출.
+  - Trigger A: 크롤러 적재(`RecipeService.saveRecipe`) 후 자동 평가.
+  - Trigger B: 어드민 레시피 수정(`AdminService.updateRecipe`) 후 자동 평가.
+  - Trigger C: 재료 매핑 저장(`saveIngredientMappings` / `bulkSaveIngredientMappings`) 후 관련 레시피 재평가.
+  - 종료 상태(NO_SUBTITLES·FAILED·SKIP)는 덮어쓰지 않음.
+  - 미리보기 모달 각 레시피 카드에 [✏️ 수정] 버튼 추가 — RecipeEditModal을 zIndex=11000으로 열고, 저장 후 미리보기 목록 자동 재조회.
+- [x] **RecipeEditModal 좌우 분할 레이아웃**:
+  - 모달 너비 1100px, 좌측=자막(읽기전용 `<pre>`, 독립 스크롤), 우측=재료 편집(독립 스크롤).
+  - 상단 헤더 필드(제목/상태/URL) + 하단 저장/취소 버튼 고정 풀너비.
+- [x] **RecipeEditModal 미매핑 재료 표기**:
+  - `GET /api/v1/admin/ingredients/mapped-names` API 추가.
+  - 모달 오픈 시 `Promise.all`로 레시피+매핑목록 동시 조회.
+  - 미매핑 재료: 빨간 테두리 + ⚠ 텍스트 + 패널 헤더 배지 "⚠ 미매핑 N개".
+- [x] **RecipeManagePage 정렬·필터**:
+  - 클라이언트 정렬: ID/노출상태/파이프라인/유튜버 (컬럼 헤더 클릭, ↑↓ 아이콘).
+  - 필터: 노출상태 셀렉트, 파이프라인 상태 셀렉트, 유튜버명 텍스트 입력, × 초기화 버튼.
+- [x] **IngredientNormalizePage 저장 후 미분류 목록 자동 갱신**:
+  - RecipeEditModal `onSaved` 콜백에서 `load()` 호출 → 해소된 항목 즉시 사라짐.
 
 ### 사용자 검색
 - [x] **요리명 검색 API**: `GET /api/v1/recipes/search?q=` (JPQL ILIKE, status/displayStatus 필터 적용).
@@ -62,11 +65,13 @@
 
 ### 기술 부채 & 기타
 - [x] **CORS 전역 통합**: `CorsConfig.java` 신규, 4개 컨트롤러 `@CrossOrigin` 제거. 허용 오리진: localhost:5173, 43.201.95.155.
-- [x] **RecipeResponse DTO 도입**: `status`/`displayStatus`/`transcript` 미노출, 재료명 master_name 변환 통합.
+- [x] **RecipeResponse DTO 도입**: `status`/`displayStatus`/`transcript` 미노출, `updatedAt` 포함, 재료명 master_name 변환 통합.
 - [x] **전역 예외처리**: `GlobalExceptionHandler.java` — `ResponseStatusException` / `IllegalArgumentException` / `RuntimeException` / catch-all 처리.
 - [x] **카피라이트 추가**: `© 2026 요너두. All rights reserved.` (App.jsx footer).
 - [x] **CLAUDE.md 에이전틱 검증 기준 추가**: `./gradlew compileJava` + `npm run build` 완료 후 보고 규칙.
 - [x] **웹/API 베이스 URL 환경변수 통일**: `VITE_API_BASE_URL`.
+- [x] **recipes `updated_at` 컬럼 추가**: `@UpdateTimestamp` 자동 갱신, `RecipeResponse` DTO 포함, 운영 RDS 마이그레이션 스크립트(`migrate_add_updated_at.sql`) 작성.
+- [x] **yoneodoo-api `.gitignore` Python 캐시 추가**: `__pycache__/`, `*.pyc`, `*.pyo`.
 
 ---
 
