@@ -73,6 +73,15 @@
 - **DB**: AWS RDS PostgreSQL (`yoneodoo-db`, `yoneodoo-db.cvgskwe4mv95.ap-northeast-2.rds.amazonaws.com`, db.t3.micro). Neon에서 이전 완료(2026-06-17).
 - **DB 동기화(수동):** `yoneodoo-api/scripts/sync_prod_to_local_db.py` — Docker 기반으로 운영(RDS) `pg_dump` → 로컬 `pg_restore`. pg_dump/pg_restore는 `SYNC_PG_IMAGE`(기본 `postgres:16`) Docker 컨테이너 안에서 실행하므로 로컬에 PostgreSQL 바이너리 불필요. 접속 정보는 `scripts/.env.sync`(Git 제외, `SYNC_DOCKER_CONTAINER`, `SYNC_PG_IMAGE` 포함).
 
+## 환경 이전 시 수동 복사 필요 파일 (Git 미추적)
+
+| 파일 | 이유 |
+|------|------|
+| `yoneodoo-api/scripts/.env.sync` | RDS 접속 정보 + Docker 컨테이너명. 없으면 DB 동기화 스크립트 실행 불가 |
+| `yoneodoo-api/src/main/resources/application-local.yaml` | 로컬 DB 접속 정보 + ADMIN_SECRET. 없으면 API 로컬 실행 불가 |
+| `yoneodoo-web/.env` | VITE_API_BASE_URL. 없으면 API 호출 엔드포인트 빈값 |
+| `yoneodoo-data/.env` | Gemini API 키 등 크롤러 실행에 필요한 키 |
+
 ## 인프라 현황 (2026-06-22 기준)
 
 | 구성 요소 | 서비스 | 세부 정보 |
