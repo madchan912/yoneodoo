@@ -5,7 +5,7 @@
 ## 제품
 
 - **요너두**: 냉장고 재료 기반으로 유튜브 요리를 찾아주는 AI 보조 서비스. 재료 매칭, 영상 노출, 단순한「내 냉장고」UX.
-- **라이브**: http://43.201.95.155 (AWS EC2 Nginx로 서빙 중 — 2026-06-17 완료. 도메인 연결 전 임시 IP)
+- **라이브**: https://yoneodoo.com (2026-07-07 도메인/HTTPS 적용 완료)
 - **구 인프라(삭제 완료)**: Vercel(프론트), Render(백엔드), Neon(DB) — 2026-06-22 삭제 완료.
 
 ## 레포 구성 (멀티 레포 / MSA 스타일)
@@ -92,7 +92,9 @@
 | 보안 그룹 | AWS | `yoneodoo-ec2-sg`(HTTP/SSH), `yoneodoo-rds-sg`(EC2 → RDS 5432) |
 | pem 키 | 로컬 | `C:\Users\madchan\Desktop\yoneodoo-key.pem` (Git 제외) |
 | GitHub Actions | CI/CD | main 브랜치 push → EC2 자동 배포 |
-| 서비스 URL | — | http://43.201.95.155 (도메인 연결 전 임시) |
+| 서비스 URL | — | https://yoneodoo.com (2026-07-07 정식 적용) |
+| 도메인 | 가비아 | yoneodoo.com, www.yoneodoo.com (DNS A레코드 → EC2) |
+| HTTPS | Let's Encrypt / Certbot | 자동 갱신 설정 완료, 443 보안그룹 추가 |
 | Render | 삭제 완료 | 2026-06-22 |
 | Neon | 삭제 완료 | 2026-06-22 |
 | Vercel | 삭제 완료 | 2026-06-22 |
@@ -118,4 +120,4 @@
 
 ---
 
-*내부 논의 기준으로 정리됨: v1.5 재료 정규화 마무리 → 운영 DB 마이그레이션 → 도메인/HTTPS(v1.9) 순으로 진행 예정.*
+*내부 논의 기준으로 정리됨: v1.5 재료 정규화 마무리 → 운영 DB 마이그레이션 → 데이터 벌크 적재(v1.9 잔여) 순으로 진행 예정. v1.9 도메인/HTTPS 완료(2026-07-07).*

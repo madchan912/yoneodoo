@@ -75,11 +75,21 @@
 
 ---
 
-## 🏗️ v1.9 대기열
+## 🏗️ v1.9 잔여
 
-- [ ] **커스텀 도메인 구매**: `yoneodoo.kr` 또는 `yoneodoo.com`.
-- [ ] **HTTPS 인증서**: Let's Encrypt / Certbot (도메인 연결 후 진행).
 - [ ] **초기 데이터 벌크 적재**: 로컬 파이썬 크롤러로 레시피 2,000~3,000개 수집 → 운영 DB.
+
+---
+
+## ✅ 완료된 작업 (v1.9)
+
+- [x] **커스텀 도메인 구매 (2026-07-07)**: 가비아 `yoneodoo.com` 구매, DNS A레코드 → EC2, Nginx server_name 설정.
+- [x] **HTTPS 인증서 (2026-07-07)**: Let's Encrypt / Certbot 발급, Nginx 자동 설정, 자동 갱신 구성, AWS 보안그룹 443 추가.
+- [x] **VITE_API_BASE_URL 도메인으로 변경**: GitHub Secrets `https://yoneodoo.com` 업데이트.
+- [x] **CORS 도메인 추가**: `https://yoneodoo.com`, `https://www.yoneodoo.com`.
+- [x] **GitHub Actions `workflow_dispatch` 트리거 추가**: yoneodoo-web, yoneodoo-api 수동 배포 가능.
+- [x] **브라우저 탭 타이틀 및 og 메타태그 수정**: title "요너두", og:title/og:description 추가, `lang="ko"`.
+- [x] **CLAUDE.md 문서 동기화 규칙 강화**: API/CORS/인프라 변경 시 CONTEXT.md 동기화 의무화.
 
 ---
 
