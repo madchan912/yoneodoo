@@ -5,17 +5,7 @@
 
 ---
 
-## 🚨 최우선 과제: 재료 정규화 마무리 (v1.5)
-
-- [ ] **재료 정규화 완료 (약 87개 잔여)**:
-  - `ingredient_mapping` 미매핑 raw_name 영상 확인 후 마스터명 확정.
-  - 어드민 AI 그룹핑(`/bulk-grouping`) + 수동 확인 병행.
-- [ ] **운영 RDS `updated_at` 마이그레이션 실행**:
-  - `scripts/migrate_add_updated_at.sql` 을 운영 RDS에 적용.
-  - 실행 전 pg_dump 백업 필수.
-- [ ] **맥북 `.env.sync` 접속 정보 업데이트**:
-  - `SYNC_SOURCE_HOST`, `SYNC_DOCKER_CONTAINER`, `SYNC_PG_IMAGE` 등 동기화.
-  - (데스크탑은 완료)
+## ✅ v1.5 완료 — 다음 목표: v1.9 (도메인 / HTTPS / 데이터 벌크 적재)
 
 ---
 
@@ -57,6 +47,9 @@
   - 필터: 노출상태 셀렉트, 파이프라인 상태 셀렉트, 유튜버명 텍스트 입력, × 초기화 버튼.
 - [x] **IngredientNormalizePage 저장 후 미분류 목록 자동 갱신**:
   - RecipeEditModal `onSaved` 콜백에서 `load()` 호출 → 해소된 항목 즉시 사라짐.
+- [x] **재료 정규화 완료 (2026-06-26)**: `ingredient_mapping` 미매핑 raw_name 전체 매핑 완료.
+- [x] **운영 RDS `updated_at` 마이그레이션 실행 (2026-06-26)**: `migrate_add_updated_at.sql` 운영 RDS 적용 완료.
+- [x] **맥북 `.env.sync` 접속 정보 업데이트 (2026-06-26)**: `SYNC_SOURCE_HOST` 등 AWS RDS 정보 맥북 환경에도 동기화 완료.
 
 ### 사용자 검색
 - [x] **요리명 검색 API**: `GET /api/v1/recipes/search?q=` (JPQL ILIKE, status/displayStatus 필터 적용).
