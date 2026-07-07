@@ -85,7 +85,7 @@
 | Frontend | React 19, Vite 8 |
 | Backend | Spring Boot 4.x, Java 21, Spring Data JPA |
 | Database | AWS RDS PostgreSQL |
-| AI / Data | Python, Llama 3.1 (Ollama), Gemini API (gemini-2.5-flash) |
+| AI / Data | Python, Llama 3.1 (Ollama), Gemini API (gemini-2.5-flash), FastAPI (v2.0 예정) |
 | DevOps & Infra | AWS EC2, Docker, Nginx, GitHub Actions CI/CD |
 
 <br>

@@ -43,22 +43,21 @@
     * `sync_prod_to_local_db.py` Docker 지원 — pg_dump/pg_restore를 Docker 컨테이너 안에서 실행, `--network container:<name>` 방식으로 버전 불일치 해결.
     * `yoneodoo-api/.gitignore` Python 캐시 파일 추가.
 
-* **잔여 작업** ⏳
-    * 재료 정규화 마무리 (약 87개 raw_name, 영상 확인 후 마스터명 확정).
-    * 운영 RDS `updated_at` 마이그레이션 실행 (`scripts/migrate_add_updated_at.sql`).
-    * 맥북 `.env.sync` RDS/Docker 접속 정보 업데이트.
+* **잔여 작업** ✅
+    * 재료 정규화 마무리 완료 (2026-06-26).
+    * 운영 RDS `updated_at` 마이그레이션 실행 완료 (2026-06-26).
+    * 맥북 `.env.sync` RDS/Docker 접속 정보 업데이트 완료 (2026-06-26).
 
 ---
 
-## 🏗️ v1.9 : 브랜드 런칭 준비 (진행 중)
+## 🏗️ v1.9 : 브랜드 런칭 준비 (완료)
 **테마:** "지인에게 당당하게 공유할 수 있는 '진짜 서비스'의 모습"
 
 * **도메인 연결** ✅: `yoneodoo.com` 가비아 구매(2026-07-07), DNS A레코드 → EC2, Nginx server_name 설정.
 * **HTTPS 인증서** ✅: Let's Encrypt / Certbot 발급, Nginx 자동 설정, 자동 갱신 구성, AWS 보안그룹 443 추가.
 * **서비스 연동 업데이트** ✅: VITE_API_BASE_URL → `https://yoneodoo.com`, CORS 도메인 추가, GitHub Actions `workflow_dispatch` 트리거 추가.
 * **UI 개선** ✅: 브라우저 탭 타이틀 "요너두", og 메타태그 추가, `lang="ko"` 설정.
-* **데이터 벌크 적재** ⏳: 로컬 환경 파이썬 크롤러로 레시피 2,000~3,000개 수집 후 운영 DB 이식.
-* **서버 사양 검토**: 트래픽 증가 시 EC2 t3.small 업그레이드 고려.
+* **데이터 벌크 적재** → v2.0으로 이동 (FastAPI 서버 구축 후 일괄 적재 예정).
 
 ---
 
