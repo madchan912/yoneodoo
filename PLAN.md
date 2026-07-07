@@ -43,34 +43,38 @@
     * `sync_prod_to_local_db.py` Docker 지원 — pg_dump/pg_restore를 Docker 컨테이너 안에서 실행, `--network container:<name>` 방식으로 버전 불일치 해결.
     * `yoneodoo-api/.gitignore` Python 캐시 파일 추가.
 
-* **잔여 작업** ⏳
-    * 재료 정규화 마무리 (약 87개 raw_name, 영상 확인 후 마스터명 확정).
-    * 운영 RDS `updated_at` 마이그레이션 실행 (`scripts/migrate_add_updated_at.sql`).
-    * 맥북 `.env.sync` RDS/Docker 접속 정보 업데이트.
+* **잔여 작업** ✅
+    * 재료 정규화 마무리 완료 (2026-06-26).
+    * 운영 RDS `updated_at` 마이그레이션 실행 완료 (2026-06-26).
+    * 맥북 `.env.sync` RDS/Docker 접속 정보 업데이트 완료 (2026-06-26).
 
 ---
 
-## 🏗️ v1.9 : 브랜드 런칭 준비 (진행 중)
+## 🏗️ v1.9 : 브랜드 런칭 준비 (완료)
 **테마:** "지인에게 당당하게 공유할 수 있는 '진짜 서비스'의 모습"
 
 * **도메인 연결** ✅: `yoneodoo.com` 가비아 구매(2026-07-07), DNS A레코드 → EC2, Nginx server_name 설정.
 * **HTTPS 인증서** ✅: Let's Encrypt / Certbot 발급, Nginx 자동 설정, 자동 갱신 구성, AWS 보안그룹 443 추가.
 * **서비스 연동 업데이트** ✅: VITE_API_BASE_URL → `https://yoneodoo.com`, CORS 도메인 추가, GitHub Actions `workflow_dispatch` 트리거 추가.
 * **UI 개선** ✅: 브라우저 탭 타이틀 "요너두", og 메타태그 추가, `lang="ko"` 설정.
-* **데이터 벌크 적재** ⏳: 로컬 환경 파이썬 크롤러로 레시피 2,000~3,000개 수집 후 운영 DB 이식.
-* **서버 사양 검토**: 트래픽 증가 시 EC2 t3.small 업그레이드 고려.
+* **데이터 벌크 적재** → v2.0으로 이동 (FastAPI 서버 구축 후 일괄 적재 예정).
 
 ---
 
-## 🐍 v2.0 : 데이터 파이프라인 서버화 & RAG 기초
-**테마:** "로컬 의존 파이프라인을 서버로 이식하고 AI 추천의 기반을 닦는다"
+## 🐍 v2.0 : 데이터 파이프라인 서버화 & AI 자동화
+**테마:** "로컬 의존 파이프라인을 서버로 이식하고 데이터 수집을 자동화한다"
 
-* **데이터 벌크 적재**: 로컬 파이썬 크롤러로 레시피 2,000~3,000개 수집 → 운영 DB 이식.
-* **yoneodoo-ai FastAPI 서버 신설**: 기존 `yoneodoo-data` 로컬 스크립트를 Python FastAPI 서버로 재구성.
-    * 크롤링·자막 추출·LLM 재료 추출 파이프라인 서버 API화.
-    * Gemini API 기반 재료 정규화 자동화.
-    * RAG 기초: 레시피 임베딩 저장 및 유사도 검색 엔드포인트.
-* **멀티레포 확장**: `yoneodoo-ai` 레포 신설, 인프라(EC2 또는 별도 서버) 배포.
+* **`yoneodoo-data` FastAPI 서버 전환** (신규 레포 없음, 기존 레포 재구성):
+    * 로컬 스크립트 → FastAPI 엔드포인트로 리팩토링 (크롤링·자막 추출·LLM 재료 추출).
+    * **다중 소스 수집**: 유튜브 자막(subtitle) + 더보기(description) 병행 추출.
+    * **LLM**: Gemini Flash — 재료 추출 + 관련 없는 영상(요리 아님) 필터링.
+    * **신규 상태값 `NEEDS_REVIEW`**: 재료 추출은 됐지만 amount가 null인 불확실한 데이터.
+* **어드민 데이터 적재 UI**:
+    * 수동 트리거: 어드민 페이지 버튼으로 특정 유튜버 크롤링 즉시 실행.
+    * 자동 배치: 매일 새벽 3시 지정 유튜버 신규 영상 자동 수집.
+    * **Discord 웹훅 알림**: 매일 오전 7~8시 전날 배치 결과 요약 리포트.
+* **인프라**: 기존 EC2 동일 사용. 메모리 부족 시 신규 AWS 계정 Free Tier EC2 활용 검토.
+* **RAG 기초**: 레시피 임베딩 저장 및 유사도 검색 엔드포인트 (v2 후반부).
 
 ---
 

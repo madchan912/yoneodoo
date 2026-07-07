@@ -14,7 +14,7 @@
 |------|------|-------------|
 | `yoneodoo-web` | 사용자 UI | React 19, Vite 8, axios |
 | `yoneodoo-api` | REST API, 저장소, 비즈니스 로직 | Spring Boot, Gradle에서 Java 21 툴체인, Spring Data JPA, PostgreSQL(JSONB) |
-| `yoneodoo-data` | 크롤링·자막·LLM → API로 레시피 적재 | Python, Ollama 호환 OpenAI 클라이언트, youtube-transcript, scrapetube, requests |
+| `yoneodoo-data` | 크롤링·자막·LLM → API로 레시피 적재 (v2.0에서 FastAPI 서버로 전환 예정) | Python, Ollama 호환 OpenAI 클라이언트, youtube-transcript, scrapetube, requests |
 | 루트 `README.md` | 제품·아키텍처 개요 | — |
 
 **데이터 흐름:** `yoneodoo-data`가 유튜브 수집 → LLM으로 정규화 → **`yoneodoo-api`에 POST** → `yoneodoo-web`이 레시피·재료 검색을 **GET**으로 조회.
@@ -60,7 +60,7 @@
 
 ## 저장 모델 (현재)
 
-- **Recipe**: JPA 엔티티, `ingredients`는 JSON 리스트(`RecipeIngredientData`: `name`, `amount`), `videoId`, `status`, `displayStatus`(Soft Delete), `transcript`, `youtuberName`, `createdAt`, `updatedAt`(`@UpdateTimestamp` 자동 갱신) 등. **사용자 응답은 `RecipeResponse` DTO로 분리** (`status`/`displayStatus`/`transcript` 미포함, `updatedAt` 포함).
+- **Recipe**: JPA 엔티티, `ingredients`는 JSON 리스트(`RecipeIngredientData`: `name`, `amount`), `videoId`, `status`, `displayStatus`(Soft Delete), `transcript`, `youtuberName`, `createdAt`, `updatedAt`(`@UpdateTimestamp` 자동 갱신) 등. **사용자 응답은 `RecipeResponse` DTO로 분리** (`status`/`displayStatus`/`transcript` 미포함, `updatedAt` 포함). **v2.0 예정 상태값**: `NEEDS_REVIEW` (재료 추출됐지만 amount null인 불확실 데이터).
 - **User**: 소셜 필드 + `fridgeIngredients` JSON 문자열 리스트 (향후 계정·냉장고 동기화).
 - **IngredientMapping**: `raw_name`(유니크), `master_name` — 재료 정규화 핵심 테이블.
 
@@ -82,7 +82,7 @@
 | `yoneodoo-web/.env` | VITE_API_BASE_URL. 없으면 API 호출 엔드포인트 빈값 |
 | `yoneodoo-data/.env` | Gemini API 키 등 크롤러 실행에 필요한 키 |
 
-## 인프라 현황 (2026-06-22 기준)
+## 인프라 현황 (2026-07-07 기준)
 
 | 구성 요소 | 서비스 | 세부 정보 |
 |-----------|--------|-----------|
@@ -99,13 +99,11 @@
 | Neon | 삭제 완료 | 2026-06-22 |
 | Vercel | 삭제 완료 | 2026-06-22 |
 
-## 알려진 기술 부채 (v1.5 잔여)
+## 알려진 기술 부채 (v2.0 대상)
 
-1. **재료 정규화 미완**: `ingredient_mapping` 미완료 raw_name 약 87개 잔여 — 영상 확인 후 마스터명 확정 필요.
-2. **운영 DB 마이그레이션 미실행**: `scripts/migrate_add_updated_at.sql` (updated_at 컬럼 추가)을 운영 RDS에 아직 적용하지 않음.
-3. **거대 단일 UI**: 로직 대부분이 `App.jsx`에 집중 → 컴포넌트 분리 필요.
-4. **캐시 갱신 연동 부분 미완**: 레시피 저장 후 `IngredientSearchService.initCache()` 자동 갱신 연동 확인 필요.
-5. **검증·에러**: Bean Validation 최소; 계약 안정화 시 `@ControllerAdvice` 고도화 검토.
+1. **거대 단일 UI**: 로직 대부분이 `App.jsx`에 집중 → 컴포넌트 분리 필요.
+2. **캐시 갱신 연동 부분 미완**: 레시피 저장 후 `IngredientSearchService.initCache()` 자동 갱신 연동 확인 필요.
+3. **검증·에러**: Bean Validation 최소; 계약 안정화 시 `@ControllerAdvice` 고도화 검토.
 
 ## 보안·운영 (v1 수준)
 
@@ -120,4 +118,4 @@
 
 ---
 
-*내부 논의 기준으로 정리됨: v1.5 재료 정규화 마무리 → 운영 DB 마이그레이션 → 데이터 벌크 적재(v1.9 잔여) 순으로 진행 예정. v1.9 도메인/HTTPS 완료(2026-07-07).*
+*내부 논의 기준으로 정리됨: v1.5/v1.9 완료(2026-07-07). v2.0 설계 확정(2026-07-07): yoneodoo-data FastAPI 전환, 다중 소스, Gemini Flash, NEEDS_REVIEW, 수동+자동 배치, Discord 알림.*
