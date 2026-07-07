@@ -14,12 +14,10 @@
 |------|------|-------------|
 | `yoneodoo-web` | 사용자 UI | React 19, Vite 8, axios |
 | `yoneodoo-api` | REST API, 저장소, 비즈니스 로직 | Spring Boot, Gradle에서 Java 21 툴체인, Spring Data JPA, PostgreSQL(JSONB) |
-| `yoneodoo-data` | 크롤링·자막·LLM → API로 레시피 적재 | Python, Ollama 호환 OpenAI 클라이언트, youtube-transcript, scrapetube, requests |
-| `yoneodoo-ai` *(v2.0 예정)* | 크롤링 파이프라인 서버화, RAG 기초 | Python, FastAPI, Gemini API, LangChain |
+| `yoneodoo-data` | 크롤링·자막·LLM → API로 레시피 적재 (v2.0에서 FastAPI 서버로 전환 예정) | Python, Ollama 호환 OpenAI 클라이언트, youtube-transcript, scrapetube, requests |
 | 루트 `README.md` | 제품·아키텍처 개요 | — |
 
 **데이터 흐름:** `yoneodoo-data`가 유튜브 수집 → LLM으로 정규화 → **`yoneodoo-api`에 POST** → `yoneodoo-web`이 레시피·재료 검색을 **GET**으로 조회.
-*(v2.0 예정)* `yoneodoo-ai` FastAPI 서버가 파이프라인을 서버 API로 대체하고 RAG 검색 엔드포인트 제공.
 
 ## Git 동기화
 
@@ -62,7 +60,7 @@
 
 ## 저장 모델 (현재)
 
-- **Recipe**: JPA 엔티티, `ingredients`는 JSON 리스트(`RecipeIngredientData`: `name`, `amount`), `videoId`, `status`, `displayStatus`(Soft Delete), `transcript`, `youtuberName`, `createdAt`, `updatedAt`(`@UpdateTimestamp` 자동 갱신) 등. **사용자 응답은 `RecipeResponse` DTO로 분리** (`status`/`displayStatus`/`transcript` 미포함, `updatedAt` 포함).
+- **Recipe**: JPA 엔티티, `ingredients`는 JSON 리스트(`RecipeIngredientData`: `name`, `amount`), `videoId`, `status`, `displayStatus`(Soft Delete), `transcript`, `youtuberName`, `createdAt`, `updatedAt`(`@UpdateTimestamp` 자동 갱신) 등. **사용자 응답은 `RecipeResponse` DTO로 분리** (`status`/`displayStatus`/`transcript` 미포함, `updatedAt` 포함). **v2.0 예정 상태값**: `NEEDS_REVIEW` (재료 추출됐지만 amount null인 불확실 데이터).
 - **User**: 소셜 필드 + `fridgeIngredients` JSON 문자열 리스트 (향후 계정·냉장고 동기화).
 - **IngredientMapping**: `raw_name`(유니크), `master_name` — 재료 정규화 핵심 테이블.
 
@@ -120,4 +118,4 @@
 
 ---
 
-*내부 논의 기준으로 정리됨: v1.5/v1.9 완료(2026-07-07) → v2.0 FastAPI 서버 신설 + 데이터 벌크 적재 → v3.0 유저 기능 고도화 순으로 진행 예정.*
+*내부 논의 기준으로 정리됨: v1.5/v1.9 완료(2026-07-07). v2.0 설계 확정(2026-07-07): yoneodoo-data FastAPI 전환, 다중 소스, Gemini Flash, NEEDS_REVIEW, 수동+자동 배치, Discord 알림.*
