@@ -68,7 +68,7 @@
 
 - API: `application.yaml`에서 기본 프로필 `local`; DB는 `application-local.yaml` / `application-prod.yaml`. 운영은 `DB_URL`, `DB_USER`, `DB_PASSWORD`. **어드민**은 환경변수 `ADMIN_SECRET`.
 - 웹은 **`VITE_API_BASE_URL`** 로 API 오리진 설정 (Vite).
-- **CORS**: `CorsConfig.java`에서 전역 관리. 허용 오리진: `http://localhost:5173`, `http://43.201.95.155`.
+- **CORS**: `CorsConfig.java`에서 전역 관리. 허용 오리진: `http://localhost:5173`, `http://43.201.95.155`, `https://yoneodoo.com`, `https://www.yoneodoo.com`.
 - **환경 파일:** `yoneodoo-web`은 `.env` / `.env.*`를 Git에서 제외. `scripts/.env.sync`도 Git 제외(비밀).
 - **DB**: AWS RDS PostgreSQL (`yoneodoo-db`, `yoneodoo-db.cvgskwe4mv95.ap-northeast-2.rds.amazonaws.com`, db.t3.micro). Neon에서 이전 완료(2026-06-17).
 - **DB 동기화(수동):** `yoneodoo-api/scripts/sync_prod_to_local_db.py` — Docker 기반으로 운영(RDS) `pg_dump` → 로컬 `pg_restore`. pg_dump/pg_restore는 `SYNC_PG_IMAGE`(기본 `postgres:16`) Docker 컨테이너 안에서 실행하므로 로컬에 PostgreSQL 바이너리 불필요. 접속 정보는 `scripts/.env.sync`(Git 제외, `SYNC_DOCKER_CONTAINER`, `SYNC_PG_IMAGE` 포함).
