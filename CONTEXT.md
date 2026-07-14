@@ -54,18 +54,25 @@
   - `POST /api/v1/admin/ingredients/bulk-map` — AI 그룹핑 결과 일괄 매핑 저장
   - `POST /api/v1/admin/crawl` — FastAPI 크롤링 트리거 (job_id 반환)
   - `GET /api/v1/admin/crawl/status/{jobId}` — 크롤링 진행 상태 조회
+  - `GET /api/v1/admin/crawl/history` — 크롤링 이력 목록 (최신순, `crawl_history` 테이블)
+  - `GET /api/v1/admin/youtubers` — 등록된 유튜버 목록 (레시피 수 포함)
+  - `POST /api/v1/admin/youtubers` — 유튜버 등록 (`channelUrl`, `youtuberName`)
+  - `DELETE /api/v1/admin/youtubers/{id}` — 유튜버 삭제 (이력 유지)
+  - `PATCH /api/v1/admin/youtubers/{id}/toggle` — 유튜버 활성/비활성 토글
 - **`ingredient_mapping` 테이블** — `raw_name`(유니크) → `master_name`: 레시피 JSON `ingredients[].name`과 매칭. 미분류 = 매핑에 없는 raw_name.
 
 ## 웹 라우팅
 
 - `/` — 사용자 앱 (`App.jsx`) — 재료 검색 / 요리명 검색 토글, 냉장고 관리
-- `/admin`, `/admin/recipes`, `/admin/ingredients` — **MVP 관리자 UI** (React Router). 로그인 시크릿은 **sessionStorage** + `adminClient`가 `X-Admin-Secret`으로 전송.
+- `/admin`, `/admin/recipes`, `/admin/ingredients`, `/admin/youtubers` — **MVP 관리자 UI** (React Router). 로그인 시크릿은 **sessionStorage** + `adminClient`가 `X-Admin-Secret`으로 전송.
 
 ## 저장 모델 (현재)
 
-- **Recipe**: JPA 엔티티, `ingredients`는 JSON 리스트(`RecipeIngredientData`: `name`, `amount`), `videoId`, `status`, `displayStatus`(Soft Delete), `transcript`, `youtuberName`, `createdAt`, `updatedAt`(`@UpdateTimestamp` 자동 갱신) 등. **사용자 응답은 `RecipeResponse` DTO로 분리** (`status`/`displayStatus`/`transcript` 미포함, `updatedAt` 포함). **v2.0 예정 상태값**: `NEEDS_REVIEW` (재료 추출됐지만 amount null인 불확실 데이터).
+- **Recipe**: JPA 엔티티, `ingredients`는 JSON 리스트(`RecipeIngredientData`: `name`, `amount`), `videoId`, `status`, `displayStatus`(Soft Delete), `transcript`, `youtuberName`, `createdAt`, `updatedAt`(`@UpdateTimestamp` 자동 갱신) 등. **사용자 응답은 `RecipeResponse` DTO로 분리** (`status`/`displayStatus`/`transcript` 미포함, `updatedAt` 포함). **상태값**: `NEEDS_REVIEW` (재료 추출됐지만 amount null인 불확실 데이터, `checkAndUpdateRecipeStatus`가 종료 상태로 처리).
 - **User**: 소셜 필드 + `fridgeIngredients` JSON 문자열 리스트 (향후 계정·냉장고 동기화).
 - **IngredientMapping**: `raw_name`(유니크), `master_name` — 재료 정규화 핵심 테이블.
+- **WatchedYoutuber**: `watched_youtubers` 테이블 — `channel_url`, `youtuber_name`, `is_active`(배치 크롤링 포함 여부), `last_crawled_at`, `created_at`. `ddl-auto: update`로 자동 생성.
+- **CrawlHistory**: `crawl_history` 테이블 — `youtuber_name`, `channel_url`, `job_id`(FastAPI UUID), `start_idx`, `end_idx`, `status`(running/done/failed), `result_summary`(TEXT, JSON), `triggered_by`(manual/batch), `started_at`, `finished_at`. `ddl-auto: update`로 자동 생성.
 
 ## 설정·환경
 
