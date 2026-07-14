@@ -80,15 +80,31 @@
 
 ---
 
-## 🔮 넥스트 백로그 (v2.0 ~ v4.0)
+## ✅ 완료된 작업 (v2.0)
 
-### v2.0 — 데이터 파이프라인 서버화 & AI 자동화
-- [ ] **`yoneodoo-data` FastAPI 서버 전환** (기존 레포 재구성, 신규 레포 없음):
-  - 로컬 스크립트 → FastAPI 엔드포인트로 리팩토링.
-  - 다중 소스 수집: 유튜브 자막(subtitle) + 더보기(description) 병행.
-  - LLM: Gemini Flash — 재료 추출 + 관련 없는 영상 필터링.
-  - 신규 상태값 `NEEDS_REVIEW` 추가 (amount null인 불확실 데이터).
-- [ ] **어드민 데이터 적재 UI**: 수동 트리거(버튼) + 자동 배치(매일 새벽 3시) + Discord 웹훅 알림(오전 7~8시 요약).
+- [x] **`yoneodoo-data` FastAPI 서버 전환** (기존 레포 재구성):
+  - 로컬 스크립트 → FastAPI 엔드포인트로 리팩토링 완료.
+  - 다중 소스 수집: 유튜브 자막(subtitle) + 더보기(description) + 댓글 병행.
+  - LLM: Gemini Flash — 재료 추출 + amount null → NEEDS_REVIEW 상태.
+  - 신규 상태값 `NEEDS_REVIEW` 추가 (`checkAndUpdateRecipeStatus` 종료 상태로 처리).
+- [x] **채널 전체 영상 수 조회 + Gemini 일일 한도 체크**:
+  - `get_channel_videos` → `(slice, total)` 튜플 반환, 추가 API 호출 없음.
+  - `GEMINI_DAILY_LIMIT=1400` (여유치 100), 초과 시 크롤링 자동 중단.
+  - in-memory `jobs` dict에서 오늘 날짜 기준 SKIP 제외 처리 건수 집계.
+- [x] **유튜버 관리 + 크롤링 이력** (`watched_youtubers`, `crawl_history` 테이블):
+  - 유튜버 CRUD (등록/삭제/활성 토글) + 레시피 수 실시간 집계.
+  - 크롤링 트리거 → RUNNING 이력 INSERT → done/failed 시 UPDATE + `last_crawled_at` 갱신.
+  - `CrawlProxyService` RestTemplate 전환 (RestClient 빈 등록 오류 해결).
+- [x] **어드민 유튜버 관리 페이지** (`YoutuberManagePage.jsx`):
+  - 유튜버 등록/목록/토글/삭제 UI.
+  - 크롤링 트리거 + 3초 폴링으로 실시간 진행 상태 표시.
+  - 크롤링 이력 테이블 (KST 변환, result_summary 파싱).
+
+## 🔮 넥스트 백로그 (v2.0 잔여 ~ v4.0)
+
+### v2.0 잔여
+- [ ] **자동 배치 크롤링**: 매일 새벽 3시 active 유튜버 순차 크롤링.
+- [ ] **Discord 웹훅 알림**: 배치 완료 후 오전 7~8시 요약 알림.
 - [ ] **RAG 기초**: 레시피 임베딩 저장 및 유사도 검색 엔드포인트 (v2 후반부).
 
 ### v3.0 — 유저 경험 고도화 & 리텐션
