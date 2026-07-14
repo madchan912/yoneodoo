@@ -120,8 +120,16 @@ git push
 ## 7. 작업 완료 검증 기준 (필수)
 
 작업 완료 보고 전 직접 실행해서 통과 확인할 것.
-- yoneodoo-api: `./gradlew compileJava` 통과 확인
-- yoneodoo-web: `npm run build` 빌드 에러 없음 확인
+
+- **yoneodoo-api**:
+  1. `./gradlew compileJava` 통과 확인
+  2. 변경된 API 엔드포인트는 curl로 직접 호출해서 응답 확인
+
+- **yoneodoo-web**: `npm run build` 빌드 에러 없음 확인
+
+- **yoneodoo-data**:
+  1. venv 활성화 후 uvicorn 서버 실행, `/health` 200 응답 확인
+  2. 변경된 엔드포인트 직접 호출해서 응답 확인
 
 실패하면 원인 분석 후 수정 → 재실행. 에러를 그대로 사람에게 넘기지 말 것.
 검증 통과 후 사용자에게 결과 보고. 커밋은 사용자가 명시적으로 요청할 때만.

@@ -14,7 +14,7 @@
 |------|------|-------------|
 | `yoneodoo-web` | 사용자 UI | React 19, Vite 8, axios |
 | `yoneodoo-api` | REST API, 저장소, 비즈니스 로직 | Spring Boot, Gradle에서 Java 21 툴체인, Spring Data JPA, PostgreSQL(JSONB) |
-| `yoneodoo-data` | 크롤링·자막·LLM → API로 레시피 적재 (v2.0에서 FastAPI 서버로 전환 예정) | Python, Ollama 호환 OpenAI 클라이언트, youtube-transcript, scrapetube, requests |
+| `yoneodoo-data` | 크롤링·자막·LLM → API로 레시피 적재 (v2.0 FastAPI 서버 전환 완료) | Python, FastAPI, Gemini Flash, youtube-transcript, scrapetube, yt-dlp, requests |
 | 루트 `README.md` | 제품·아키텍처 개요 | — |
 
 **데이터 흐름:** `yoneodoo-data`가 유튜브 수집 → LLM으로 정규화 → **`yoneodoo-api`에 POST** → `yoneodoo-web`이 레시피·재료 검색을 **GET**으로 조회.
@@ -30,7 +30,8 @@
   - **백엔드**: EC2 위 Docker 컨테이너로 Spring Boot 실행.
   - **DB**: AWS RDS PostgreSQL (`yoneodoo-db`, `ap-northeast-2`).
 - **CI/CD**: GitHub Actions — `main` 브랜치 push 시 자동 배포 (2026-06-22 구축 완료).
-  - API: SSH → git pull → docker build → docker run
+  - API: SSH → git pull → docker build → docker run (port 8080)
+  - Data: SSH → git pull → docker build → docker run (port 8000)
   - Web: npm build → SCP dist → nginx reload
 - **일상 개발은 `develop`**, 기능 작업은 **`feature/*`** 에서 진행. **배포는 `main` 머지로 자동 트리거**.
 
@@ -51,6 +52,8 @@
   - `POST /api/v1/admin/ingredients/suggest` — Gemini AI 단건 마스터명 추천
   - `POST /api/v1/admin/ingredients/bulk-grouping` — Gemini AI 전체 미분류 그룹핑 (청크 50개씩)
   - `POST /api/v1/admin/ingredients/bulk-map` — AI 그룹핑 결과 일괄 매핑 저장
+  - `POST /api/v1/admin/crawl` — FastAPI 크롤링 트리거 (job_id 반환)
+  - `GET /api/v1/admin/crawl/status/{jobId}` — 크롤링 진행 상태 조회
 - **`ingredient_mapping` 테이블** — `raw_name`(유니크) → `master_name`: 레시피 JSON `ingredients[].name`과 매칭. 미분류 = 매핑에 없는 raw_name.
 
 ## 웹 라우팅
@@ -66,7 +69,7 @@
 
 ## 설정·환경
 
-- API: `application.yaml`에서 기본 프로필 `local`; DB는 `application-local.yaml` / `application-prod.yaml`. 운영은 `DB_URL`, `DB_USER`, `DB_PASSWORD`. **어드민**은 환경변수 `ADMIN_SECRET`.
+- API: `application.yaml`에서 기본 프로필 `local`; DB는 `application-local.yaml` / `application-prod.yaml`. 운영은 `DB_URL`, `DB_USER`, `DB_PASSWORD`. **어드민**은 환경변수 `ADMIN_SECRET`. **FastAPI 서버 URL**은 `YONEODOO_DATA_URL` (기본값: `http://localhost:8000`).
 - 웹은 **`VITE_API_BASE_URL`** 로 API 오리진 설정 (Vite).
 - **CORS**: `CorsConfig.java`에서 전역 관리. 허용 오리진: `http://localhost:5173`, `http://43.201.95.155`, `https://yoneodoo.com`, `https://www.yoneodoo.com`.
 - **환경 파일:** `yoneodoo-web`은 `.env` / `.env.*`를 Git에서 제외. `scripts/.env.sync`도 Git 제외(비밀).
@@ -86,7 +89,7 @@
 
 | 구성 요소 | 서비스 | 세부 정보 |
 |-----------|--------|-----------|
-| EC2 | AWS ap-northeast-2 | `yoneodoo-api`, t3.micro, Ubuntu — 백엔드(Docker) + 프론트(Nginx) 통합 |
+| EC2 | AWS ap-northeast-2 | `yoneodoo-api`(8080) + `yoneodoo-data`(8000, v2.0 배포 예정), t3.micro, Ubuntu — 백엔드(Docker) + 프론트(Nginx) 통합 |
 | RDS | AWS ap-northeast-2 | `yoneodoo-db`, PostgreSQL, db.t3.micro |
 | IAM | AWS | `yoneodoo-admin` 사용자, 최소 권한 |
 | 보안 그룹 | AWS | `yoneodoo-ec2-sg`(HTTP/SSH), `yoneodoo-rds-sg`(EC2 → RDS 5432) |
