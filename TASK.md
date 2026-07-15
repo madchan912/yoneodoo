@@ -87,10 +87,13 @@
   - 다중 소스 수집: 유튜브 자막(subtitle) + 더보기(description) + 댓글 병행.
   - LLM: Gemini Flash — 재료 추출 + amount null → NEEDS_REVIEW 상태.
   - 신규 상태값 `NEEDS_REVIEW` 추가 (`checkAndUpdateRecipeStatus` 종료 상태로 처리).
-- [x] **채널 전체 영상 수 조회 + Gemini 일일 한도 체크**:
-  - `get_channel_videos` → `(slice, total)` 튜플 반환, 추가 API 호출 없음.
+- [x] **채널 전체 영상 수 조회 UI** (`GET /channel-info`):
+  - FastAPI `GET /channel-info?channel_url=` → scrapetube로 전체 숏츠 수 반환.
+  - Spring Boot AdminController 프록시 추가 → 프론트에서 조회.
+  - `YoutuberManagePage.jsx`: 크롤링 트리거 클릭 시 "전체 영상: N개" 표시, end 인덱스 자동 설정.
+- [x] **채널 전체 영상 수 + Gemini 일일 한도 체크**:
+  - `get_channel_videos` → `(slice, total)` 튜플 반환.
   - `GEMINI_DAILY_LIMIT=1400` (여유치 100), 초과 시 크롤링 자동 중단.
-  - in-memory `jobs` dict에서 오늘 날짜 기준 SKIP 제외 처리 건수 집계.
 - [x] **유튜버 관리 + 크롤링 이력** (`watched_youtubers`, `crawl_history` 테이블):
   - 유튜버 CRUD (등록/삭제/활성 토글) + 레시피 수 실시간 집계.
   - 크롤링 트리거 → RUNNING 이력 INSERT → done/failed 시 UPDATE + `last_crawled_at` 갱신.
@@ -99,12 +102,25 @@
   - 유튜버 등록/목록/토글/삭제 UI.
   - 크롤링 트리거 + 3초 폴링으로 실시간 진행 상태 표시.
   - 크롤링 이력 테이블 (KST 변환, result_summary 파싱).
+- [x] **크롤링 안정성 개선** (2026-07-15):
+  - `transcript.py` / `description.py` / `comment.py`: IP 차단 감지 시 상위로 re-raise.
+  - `pipeline.py`: RequestBlocked 감지 시 즉시 `blocked` 상태로 크롤링 전체 중단.
+  - `pipeline.py`: 자막 실패 시 더보기+댓글로 Gemini 재시도, 셋 다 없을 때만 NO_SUBTITLES.
+  - `pipeline.py`: 영상 간 딜레이 20~40초 → 30~60초 강화.
+  - `crawl.py`: `BackgroundTasks` → `threading.Thread(daemon=True)` 교체 — 프론트 연결 끊겨도 크롤링 계속 실행.
+  - `YoutuberService.java`: `finishCrawlHistory` 조건 `"running".equals(status)` → `!"done".equals(status)` — failed→done 덮어쓰기 허용.
+- [x] **동시 배포 충돌 방지** (2026-07-15):
+  - `yoneodoo-api` GitHub Actions `deploy.yml`에 `sleep 300` (5분) 대기 추가 — yoneodoo-data가 먼저 기동된 후 API 배포.
+- [x] **자동 배치 크롤링 + Discord 알림** (2026-07-15):
+  - `scheduler.py`: 매일 03:00 `GET /api/v1/admin/youtubers`로 active 유튜버 순차 크롤링. IP 차단 시 즉시 배치 전체 중단. 유튜버별 결과 수집.
+  - `scheduler.py`: 07:00 Discord 리포트 — 배치 이력 없으면 스킵.
+  - `discord.py`: 배치 결과 임베드 전송 (차단=빨강/실패=주황/정상=초록). 유튜버별 결과 상세 포함.
+  - 환경변수 추가: `DISCORD_WEBHOOK_URL`, `SPRING_API_BASE_URL`, `ADMIN_SECRET`.
+  - `test_discord.py`: 웹훅 테스트 스크립트 (`.env.data.prod`에서 URL 로드).
 
 ## 🔮 넥스트 백로그 (v2.0 잔여 ~ v4.0)
 
 ### v2.0 잔여
-- [ ] **자동 배치 크롤링**: 매일 새벽 3시 active 유튜버 순차 크롤링.
-- [ ] **Discord 웹훅 알림**: 배치 완료 후 오전 7~8시 요약 알림.
 - [ ] **롱폼 영상 지원**: 숏츠 외 일반 영상(long-form)도 크롤링·레시피 추출 가능하도록 파이프라인 확장. scrapetube `content_type` 파라미터 및 API 범위 조정 필요.
 - [ ] **RAG 기초**: 레시피 임베딩 저장 및 유사도 검색 엔드포인트 (v2 후반부).
 
