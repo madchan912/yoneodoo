@@ -117,6 +117,11 @@
   - `discord.py`: 배치 결과 임베드 전송 (차단=빨강/실패=주황/정상=초록). 유튜버별 결과 상세 포함.
   - 환경변수 추가: `DISCORD_WEBHOOK_URL`, `SPRING_API_BASE_URL`, `ADMIN_SECRET`.
   - `test_discord.py`: 웹훅 테스트 스크립트 (`.env.data.prod`에서 URL 로드).
+- [x] **식품성분표 기반 영양성분 DB 구축 + 어드민 관리 페이지** (2026-07-15):
+  - `food_nutrition_master` 테이블: 식품성분표(10개정판) 전 5개 시트 16,535건 적재 (`scripts/insert_food_master.py`).
+  - `ingredient_nutrition` 테이블: `ingredient_mapping.master_name` 기준 159건 — 자동 매칭 125건(foodsafety_kr) + 수동 필요 34건(manual_needed) (`scripts/insert_nutrition.py`).
+  - `NutritionAdminController`: 4개 어드민 엔드포인트 추가 (`GET /stats`, `GET /unmatched`, `GET /search`, `PUT /{masterName}`).
+  - `NutritionManagePage.jsx`: 좌우 분할 UI — 좌측 통계 카드·미매칭 목록, 우측 식품성분표 검색·영양값 폼·저장. `/admin/nutrition` 라우트 추가.
 
 ## 🔮 넥스트 백로그 (v2.0 잔여 ~ v4.0)
 

@@ -65,12 +65,16 @@
   - `POST /api/v1/admin/youtubers` — 유튜버 등록 (`channelUrl`, `youtuberName`)
   - `DELETE /api/v1/admin/youtubers/{id}` — 유튜버 삭제 (이력 유지)
   - `PATCH /api/v1/admin/youtubers/{id}/toggle` — 유튜버 활성/비활성 토글
+  - `GET /api/v1/admin/nutrition/stats` — 영양성분 전체/완료/미완료 카운트
+  - `GET /api/v1/admin/nutrition/unmatched` — 수동 입력 필요 재료 목록 (source='manual_needed')
+  - `GET /api/v1/admin/nutrition/search?keyword=` — 식품성분표(food_nutrition_master) 키워드 검색 (최대 20건)
+  - `PUT /api/v1/admin/nutrition/{masterName}` — 재료 영양 값 저장
 - **`ingredient_mapping` 테이블** — `raw_name`(유니크) → `master_name`: 레시피 JSON `ingredients[].name`과 매칭. 미분류 = 매핑에 없는 raw_name.
 
 ## 웹 라우팅
 
 - `/` — 사용자 앱 (`App.jsx`) — 재료 검색 / 요리명 검색 토글, 냉장고 관리
-- `/admin`, `/admin/recipes`, `/admin/ingredients`, `/admin/youtubers` — **MVP 관리자 UI** (React Router). 로그인 시크릿은 **sessionStorage** + `adminClient`가 `X-Admin-Secret`으로 전송.
+- `/admin`, `/admin/recipes`, `/admin/ingredients`, `/admin/youtubers`, `/admin/nutrition` — **MVP 관리자 UI** (React Router). 로그인 시크릿은 **sessionStorage** + `adminClient`가 `X-Admin-Secret`으로 전송.
 
 ## 저장 모델 (현재)
 
@@ -79,6 +83,8 @@
 - **IngredientMapping**: `raw_name`(유니크), `master_name` — 재료 정규화 핵심 테이블.
 - **WatchedYoutuber**: `watched_youtubers` 테이블 — `channel_url`, `youtuber_name`, `is_active`(배치 크롤링 포함 여부), `last_crawled_at`, `created_at`. `ddl-auto: update`로 자동 생성.
 - **CrawlHistory**: `crawl_history` 테이블 — `youtuber_name`, `channel_url`, `job_id`(FastAPI UUID), `start_idx`, `end_idx`, `status`(running/done/failed), `result_summary`(TEXT, JSON), `triggered_by`(manual/batch), `started_at`, `finished_at`. `ddl-auto: update`로 자동 생성.
+- **IngredientNutrition**: `ingredient_nutrition` 테이블 — `master_name`(UNIQUE, `ingredient_mapping.master_name`과 1:1), 영양성분 7개 필드(calories/protein/fat/saturated_fat/carbohydrate/sugar/sodium, NUMERIC(7,2)), `serving_size`=100, `serving_unit`="g", `source`(foodsafety_kr/manual_needed/manual). 식품성분표 자동 매칭 125건 + 수동 입력 필요 34건.
+- **FoodNutritionMaster**: `food_nutrition_master` 테이블 — 식품성분표(10개정판) 전 5개 시트 16,535건. `food_name`, `food_group`, 영양성분 7개, `source_ver`(10.0~10.4). 어드민 영양성분 검색 원천 데이터.
 
 ## 설정·환경
 
