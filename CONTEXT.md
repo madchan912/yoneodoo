@@ -43,6 +43,12 @@
 - `GET /api/v1/ingredients/search?keyword=` — 기동 시 `ingredient_mapping.master_name` 기준 인메모리 캐시 검색 (초성·자모 지원)
 - `GET /health` — 간단한 생존 확인 문자열
 - `/api/v1/fridge` — 유저 기반 냉장고 API. 웹 v1은 localStorage로 처리하므로 현재 UX에서 선택 사항.
+- **FastAPI (`yoneodoo-data`, port 8000)** — 크롤링·LLM 파이프라인 서버. 주요 엔드포인트:
+  - `POST /crawl` — 채널 크롤링 시작 (job_id 반환, threading.Thread 백그라운드 실행)
+  - `GET /status/{job_id}` — 크롤링 진행 상태 조회
+  - `GET /channel-info?channel_url=` — 채널 전체 숏츠 수 조회
+  - `GET /health` — 생존 확인
+  - **스케줄러**: 매일 03:00 active 유튜버 순차 크롤링 → 07:00 Discord 리포트
 - **Admin (`/api/v1/admin/**`)** — 헤더 `X-Admin-Secret` 인증 필수. 주요 엔드포인트:
   - `GET /api/v1/admin/dashboard/stats` — 대시보드 집계
   - `GET /api/v1/admin/recipes`, `GET /api/v1/admin/recipes/{id}`, `PUT /api/v1/admin/recipes/{id}` — 레시피 CRUD
@@ -77,6 +83,7 @@
 ## 설정·환경
 
 - API: `application.yaml`에서 기본 프로필 `local`; DB는 `application-local.yaml` / `application-prod.yaml`. 운영은 `DB_URL`, `DB_USER`, `DB_PASSWORD`. **어드민**은 환경변수 `ADMIN_SECRET`. **FastAPI 서버 URL**은 `YONEODOO_DATA_URL` (기본값: `http://localhost:8000`).
+- Data: `yoneodoo-data/.env` (Git 제외). 주요 환경변수: `GEMINI_API_KEY`, `API_BASE_URL`(Spring recipes 엔드포인트), `SPRING_API_BASE_URL`(Spring 루트, 기본 `http://localhost:8080`), `ADMIN_SECRET`(Spring 어드민 인증), `DISCORD_WEBHOOK_URL`(배치 리포트 웹훅, 없으면 알림 스킵).
 - 웹은 **`VITE_API_BASE_URL`** 로 API 오리진 설정 (Vite).
 - **CORS**: `CorsConfig.java`에서 전역 관리. 허용 오리진: `http://localhost:5173`, `http://43.201.95.155`, `https://yoneodoo.com`, `https://www.yoneodoo.com`.
 - **환경 파일:** `yoneodoo-web`은 `.env` / `.env.*`를 Git에서 제외. `scripts/.env.sync`도 Git 제외(비밀).
@@ -90,7 +97,8 @@
 | `yoneodoo-api/scripts/.env.sync` | RDS 접속 정보 + Docker 컨테이너명. 없으면 DB 동기화 스크립트 실행 불가 |
 | `yoneodoo-api/src/main/resources/application-local.yaml` | 로컬 DB 접속 정보 + ADMIN_SECRET. 없으면 API 로컬 실행 불가 |
 | `yoneodoo-web/.env` | VITE_API_BASE_URL. 없으면 API 호출 엔드포인트 빈값 |
-| `yoneodoo-data/.env` | Gemini API 키 등 크롤러 실행에 필요한 키 |
+| `yoneodoo-data/.env` | GEMINI_API_KEY, API_BASE_URL, SPRING_API_BASE_URL, ADMIN_SECRET, DISCORD_WEBHOOK_URL |
+| `yoneodoo-data/.env.data.prod` | EC2 운영용 — `test_discord.py` 실행 시 웹훅 URL 로드에 사용 |
 
 ## 인프라 현황 (2026-07-07 기준)
 
@@ -128,4 +136,4 @@
 
 ---
 
-*내부 논의 기준으로 정리됨: v1.5/v1.9 완료(2026-07-07). v2.0 설계 확정(2026-07-07): yoneodoo-data FastAPI 전환, 다중 소스, Gemini Flash, NEEDS_REVIEW, 수동+자동 배치, Discord 알림.*
+*내부 논의 기준으로 정리됨: v1.5/v1.9 완료(2026-07-07). v2.0 핵심 기능 완료(2026-07-15): FastAPI 전환, 다중 소스 수집, Gemini Flash, NEEDS_REVIEW, 유튜버 관리 UI, 채널 영상 수 조회, 배치 스케줄러(03:00), Discord 알림(07:00), IP 차단 감지·중단, 크롤링 안정성 강화. v2.0 잔여: 롱폼 영상 지원, RAG 기초.*
