@@ -120,8 +120,10 @@
 - [x] **식품성분표 기반 영양성분 DB 구축 + 어드민 관리 페이지** (2026-07-15):
   - `food_nutrition_master` 테이블: 식품성분표(10개정판) 전 5개 시트 16,535건 적재 (`scripts/insert_food_master.py`).
   - `ingredient_nutrition` 테이블: `ingredient_mapping.master_name` 기준 159건 — 자동 매칭 125건(foodsafety_kr) + 수동 필요 34건(manual_needed) (`scripts/insert_nutrition.py`).
-  - `NutritionAdminController`: 4개 어드민 엔드포인트 추가 (`GET /stats`, `GET /unmatched`, `GET /search`, `PUT /{masterName}`).
-  - `NutritionManagePage.jsx`: 좌우 분할 UI — 좌측 통계 카드·미매칭 목록, 우측 식품성분표 검색·영양값 폼·저장. `/admin/nutrition` 라우트 추가.
+  - `NutritionAdminController`: 5개 어드민 엔드포인트 (`GET /stats`, `GET /unmatched`, `GET /matched`, `GET /search`, `PUT /{masterName}`).
+  - `NutritionManagePage.jsx`: 좌우 분할 UI — 좌측 미매칭/완료 탭·통계, 우측 식품성분표 검색·영양값 폼·저장. `/admin/nutrition` 라우트 추가.
+  - Gemini API로 `manual_needed` 19건 추정값 채우기 (`scripts/fill_nutrition_gemini.py`, source=`gemini_est`). 캡사이신 1건 null 유지.
+  - 완료 탭: source별 배지(식품DB=초록/AI=주황/수동=파랑), 클릭 시 기존 값 폼 자동 채움·수정 가능.
 
 ## 🔮 넥스트 백로그 (v2.0 잔여 ~ v4.0)
 
