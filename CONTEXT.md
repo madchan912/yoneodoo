@@ -84,8 +84,9 @@
 - **IngredientMapping**: `raw_name`(유니크), `master_name` — 재료 정규화 핵심 테이블.
 - **WatchedYoutuber**: `watched_youtubers` 테이블 — `channel_url`, `youtuber_name`, `is_active`(배치 크롤링 포함 여부), `last_crawled_at`, `created_at`. `ddl-auto: update`로 자동 생성.
 - **CrawlHistory**: `crawl_history` 테이블 — `youtuber_name`, `channel_url`, `job_id`(FastAPI UUID), `start_idx`, `end_idx`, `status`(running/done/failed), `result_summary`(TEXT, JSON), `triggered_by`(manual/batch), `started_at`, `finished_at`. `ddl-auto: update`로 자동 생성.
-- **IngredientNutrition**: `ingredient_nutrition` 테이블 — `master_name`(UNIQUE, `ingredient_mapping.master_name`과 1:1), 영양성분 7개 필드(calories/protein/fat/saturated_fat/carbohydrate/sugar/sodium, NUMERIC(7,2)), `serving_size`=100, `serving_unit`="g", `source`(foodsafety_kr/manual_needed/manual/gemini_est). 식품성분표 자동 매칭 125건 + Gemini 추정 19건(gemini_est) + 수동 필요 15건(manual_needed, 캡사이신 등 1건 null 유지).
-- **FoodNutritionMaster**: `food_nutrition_master` 테이블 — 식품성분표(10개정판) 전 5개 시트 16,535건. `food_name`, `food_group`, 영양성분 7개, `source_ver`(10.0~10.4). 어드민 영양성분 검색 원천 데이터.
+- **IngredientNutrition**: `ingredient_nutrition` 테이블 — `master_name`(UNIQUE, `ingredient_mapping.master_name`과 1:1), 영양성분 7개 필드(calories/protein/fat/saturated_fat/carbohydrate/sugar/sodium, NUMERIC(7,2)), `serving_size`=100, `serving_unit`="g", `source`(foodsafety_kr/manual/gemini_est/manual_needed). 식품성분표 자동 매칭 125건 + Gemini 추정 19건(gemini_est) + 수동 필요 15건(manual_needed, 캡사이신 1건 null 유지). 모든 값은 100g 기준.
+- **FoodNutritionMaster**: `food_nutrition_master` 테이블 — 식품성분표(10개정판) 전 5개 시트 16,535건. `food_name`, `food_group`, 영양성분 7개, `source_ver`(10.0~10.4). 어드민 영양성분 검색 원천 데이터. `food_name` ILIKE 검색 시 DISTINCT ON으로 중복 제거.
+- **RecipeNutrition**: `recipe_nutrition` 테이블 — `recipe_id`(BIGINT UNIQUE), 영양성분 7개(NUMERIC(7,2)), `coverage_pct`(NUMERIC(5,2)). coverage_pct = 계산된 재료수 / 전체 재료수 × 100 (신뢰도 지표). 194건 적재, 평균 coverage 83.1%. scripts/calc_recipe_nutrition.py로 재계산 가능(한글 단위 전체 지원: 스푼=15g, 큰술=15g, 작은술=5g, 컵=200g, 꼬집=1g, 주먹/줌=50g 등).
 
 ## 설정·환경
 
@@ -106,6 +107,9 @@
 | `yoneodoo-web/.env` | VITE_API_BASE_URL. 없으면 API 호출 엔드포인트 빈값 |
 | `yoneodoo-data/.env` | GEMINI_API_KEY, API_BASE_URL, SPRING_API_BASE_URL, ADMIN_SECRET, DISCORD_WEBHOOK_URL |
 | `yoneodoo-data/.env.data.prod` | EC2 운영용 — `test_discord.py` 실행 시 웹훅 URL 로드에 사용 |
+| `02_Yoneodoo/scripts/calc_recipe_nutrition.py` | RDS 직접 접속 — recipe_nutrition 재계산 스크립트 (환경변수 없이 하드코딩, .gitignore 제외 아님이나 민감정보 포함) |
+| `02_Yoneodoo/scripts/fill_nutrition_gemini.py` | GEMINI_API_KEY + RDS 직접 접속 — manual_needed 항목 Gemini 추정값 채우기 |
+| `02_Yoneodoo/scripts/insert_nutrition.py` | RDS 직접 접속 — ingredient_nutrition 초기 적재 (재실행 시 사용) |
 
 ## 인프라 현황 (2026-07-07 기준)
 
@@ -143,4 +147,4 @@
 
 ---
 
-*내부 논의 기준으로 정리됨: v1.5/v1.9 완료(2026-07-07). v2.0 핵심 기능 완료(2026-07-15): FastAPI 전환, 다중 소스 수집, Gemini Flash, NEEDS_REVIEW, 유튜버 관리 UI, 채널 영상 수 조회, 배치 스케줄러(03:00), Discord 알림(07:00), IP 차단 감지·중단, 크롤링 안정성 강화. v2.0 잔여: 롱폼 영상 지원, RAG 기초.*
+*내부 논의 기준으로 정리됨: v1.5/v1.9 완료(2026-07-07). v2.0 핵심 기능 완료(2026-07-15~16): FastAPI 전환, 다중 소스 수집, Gemini Flash, NEEDS_REVIEW, 유튜버 관리 UI, 채널 영상 수 조회, 배치 스케줄러(03:00), Discord 알림(07:00), IP 차단 감지·중단, 크롤링 안정성 강화, 영양성분 파이프라인(ingredient_nutrition 159건·recipe_nutrition 194건·coverage 83.1%). v2.0 잔여: recipe_nutrition API 연동, 이상 레시피 보정, 롱폼 영상 지원, RAG 식단 플래너.*
