@@ -69,10 +69,12 @@
   - `DELETE /api/v1/admin/youtubers/{id}` — 유튜버 삭제 (이력 유지)
   - `PATCH /api/v1/admin/youtubers/{id}/toggle` — 유튜버 활성/비활성 토글
   - `GET /api/v1/admin/nutrition/stats` — 영양성분 전체/완료/미완료 카운트
-  - `GET /api/v1/admin/nutrition/unmatched` — 수동 입력 필요 재료 목록 (source='manual_needed')
+  - `GET /api/v1/admin/nutrition/unmatched` — ingredient_nutrition에 미등록 재료 목록
+  - `GET /api/v1/admin/nutrition/manual-needed` — source='manual_needed' 재료 목록 (AI 추정 실패, 수동 필요)
   - `GET /api/v1/admin/nutrition/matched` — 완료 재료 목록 (source != 'manual_needed', 이름순)
   - `GET /api/v1/admin/nutrition/search?keyword=` — 식품성분표(food_nutrition_master) 키워드 검색 (최대 20건)
-  - `PUT /api/v1/admin/nutrition/{masterName}` — 재료 영양 값 저장
+  - `PUT /api/v1/admin/nutrition/{masterName}` — 재료 영양 값 upsert (없으면 신규 생성, 있으면 갱신)
+  - `POST /api/v1/recipes/{id}/nutrition` — 파이프라인이 recipe_nutrition 합계 저장 (인증 없음, 내부 전용)
 - **`ingredient_mapping` 테이블** — `raw_name`(유니크) → `master_name`: 레시피 JSON `ingredients[].name`과 매칭. 미분류 = 매핑에 없는 raw_name.
 
 ## 웹 라우팅
@@ -82,7 +84,7 @@
 
 ## 저장 모델 (현재)
 
-- **Recipe**: JPA 엔티티, `ingredients`는 JSON 리스트(`RecipeIngredientData`: `name`, `amount`), `videoId`, `status`, `displayStatus`(Soft Delete), `transcript`, `youtuberName`, `createdAt`, `updatedAt`(`@UpdateTimestamp` 자동 갱신) 등. **사용자 응답은 `RecipeResponse` DTO로 분리** (`status`/`displayStatus`/`transcript` 미포함, `updatedAt` 포함). **상태값**: `NEEDS_REVIEW` (재료 추출됐지만 amount null인 불확실 데이터, `checkAndUpdateRecipeStatus`가 종료 상태로 처리).
+- **Recipe**: JPA 엔티티, `ingredients`는 JSON 리스트(`RecipeIngredientData`: `name`, `amount`), `videoId`, `status`, `displayStatus`(Soft Delete), `transcript`, `description`(더보기 원문), `firstComment`(첫번째 댓글), `youtuberName`, `createdAt`, `updatedAt`(`@UpdateTimestamp` 자동 갱신) 등. **사용자 응답은 `RecipeResponse` DTO로 분리** (`status`/`displayStatus`/`transcript` 미포함, `updatedAt` 포함). **상태값**: `UNMATCHED`(재료 정규화 미완료, 매핑 완료 시 자동 재평가), `INCOMPLETE`(정규화 완료 but amount null, 수동 입력 필요), `SUCCESS`(정상), `NO_SUBTITLES`(자막 없음), `FAILED`(실패), `SKIP`(요리 아님). `checkAndUpdateRecipeStatus()`는 NO_SUBTITLES/FAILED/SKIP만 종료 상태로 처리하고 UNMATCHED/INCOMPLETE는 매핑 저장 시마다 재평가.
 - **User**: 소셜 필드 + `fridgeIngredients` JSON 문자열 리스트 (향후 계정·냉장고 동기화).
 - **IngredientMapping**: `raw_name`(유니크), `master_name` — 재료 정규화 핵심 테이블.
 - **WatchedYoutuber**: `watched_youtubers` 테이블 — `channel_url`, `youtuber_name`, `is_active`(배치 크롤링 포함 여부), `last_crawled_at`, `created_at`. `ddl-auto: update`로 자동 생성.
@@ -152,4 +154,4 @@
 
 ---
 
-*내부 논의 기준으로 정리됨: v1.5/v1.9 완료(2026-07-07). v2.0 완료(2026-07-15~17): FastAPI 전환, 다중 소스 수집, Gemini Flash, NEEDS_REVIEW, 유튜버 관리 UI, 채널 영상 수 조회, 배치 스케줄러(03:00), Discord 알림(07:00), IP 차단 감지·중단, 크롤링 안정성 강화, 영양성분 파이프라인(ingredient_nutrition 159건·recipe_nutrition 194건·coverage 83.1%), RAG 식단 플래너(POST /api/v1/search/meal-plan, recipe_embeddings 208건, ?beta=true 조건 노출), EC2 Elastic IP 고정(3.37.238.221), Gemini API 유료 전환(선불 크레딧), 유지만 외 레시피 삭제(208건 유지). v2.0 잔여: recipe_nutrition API 연동, 이상 레시피 보정, 롱폼 영상 지원, 로컬 크롤링으로 데이터 2000건 확보.*
+*내부 논의 기준으로 정리됨: v1.5/v1.9 완료(2026-07-07). v2.0 완료(2026-07-15~17): FastAPI 전환, 다중 소스 수집, Gemini Flash, 유튜버 관리 UI, 채널 영상 수 조회, 배치 스케줄러(03:00), Discord 알림(07:00), IP 차단 감지·중단, 크롤링 안정성 강화, 영양성분 파이프라인(ingredient_nutrition 159건·recipe_nutrition 194건·coverage 83.1%), RAG 식단 플래너(POST /api/v1/search/meal-plan, recipe_embeddings 208건, ?beta=true 조건 노출), EC2 Elastic IP 고정(3.37.238.221), Gemini API 유료 전환(선불 크레딧), 유지만 외 레시피 삭제(208건 유지). v2.1 완료(2026-07-17): 상태값 정리(PENDING→UNMATCHED, NEEDS_REVIEW→INCOMPLETE), 파이프라인 단순화(2차 폴백 제거·자막+더보기+댓글 한번에 전달), 영양성분 파이프라인 자동화(레시피 저장 후 Gemini 추정→ingredient_nutrition upsert→recipe_nutrition 계산), 어드민 영양성분 확인필요 탭(source=manual_needed), RecipeEditModal 아코디언 UI(자막/더보기/첫댓글), Recipe 엔티티 description/firstComment 필드 추가. v2.1 잔여: description/firstComment DB 마이그레이션 수동 실행 필요(ALTER TABLE recipes ADD COLUMN ...), 이상 레시피 보정, 롱폼 영상 지원, 로컬 크롤링으로 데이터 2000건 확보.*
