@@ -80,7 +80,7 @@
     * `recipe_nutrition`: 194건 칼로리 계산 적재. 한글 단위 전체 지원, 평균 coverage 83.1%.
     * 어드민 영양성분 관리 페이지 (`/admin/nutrition`) — 미매칭/완료 탭, 식품성분표 검색, 수정.
 * **recipe_nutrition API 연동**: 레시피 응답에 칼로리 포함, coverage 50% 미만 미표시 처리.
-* **RAG 식단 플래너**: 칼로리 기반 레시피 필터링 + Gemini 1주일 식단 조합 (v2 후반부).
+* **RAG 식단 플래너** ✅ (2026-07-17): pgvector 임베딩 + Gemini 4단계 파이프라인. `POST /api/v1/search/meal-plan` 배포 완료. 임베딩 백필 214건 쿼터 리셋 후 재시도 예정.
 
 ---
 

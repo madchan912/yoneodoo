@@ -133,13 +133,21 @@
   - 평균 칼로리 599kcal (194건), 분포: 0~200(29건) / 201~400(54건) / 401~600(48건) / 601~(62건).
   - 이상 레시피 분석 완료: 과대(5046kcal 컵누들 — `스푼 숫자` 역순 파싱 버그), 과소(63kcal 비빔밥 — 주재료 밥 누락).
 
+- [x] **RAG 식단 플래너 기초 구현** (2026-07-17):
+  - `recipe_embeddings` 테이블: `recipe_id`, `embedding vector(768)`, `updated_at`. pgvector `<=>` 코사인 유사도.
+  - `GeminiApiService.embedContent()`: `gemini-embedding-001` 모델, `outputDimensionality: 768`.
+  - `RecipeEmbeddingService.embedAndSave()`: 레시피 저장 시 자동 임베딩 + 백필 API (`POST /api/v1/admin/embeddings/backfill`).
+  - `RecipeEmbeddingRepository`: `CAST(:embedding AS vector)` named parameter (`?2::vector` → Hibernate ParameterLabelException 수정).
+  - `RecipeSearchService`: 4단계 RAG 파이프라인 — ①Gemini 조건 추출(JSON) ②조건 텍스트 벡터화 ③pgvector 유사도 검색(coverage_pct≥50) ④Gemini 식단 조합.
+  - `POST /api/v1/search/meal-plan` 공개 API (`RecipeSearchController`). `{ meal_plan, recipes, conditions }` 반환.
+
 ## 🔮 넥스트 백로그 (v2.0 잔여 ~ v4.0)
 
 ### v2.0 잔여
+- [ ] **임베딩 백필**: Gemini 쿼터 리셋 후 214건 백필 재시도. `POST /api/v1/admin/embeddings/backfill` (EC2 localhost로 SSH 직접 호출).
 - [ ] **recipe_nutrition API 연동**: `GET /api/v1/recipes` 응답에 칼로리 포함. coverage_pct 50% 미만은 칼로리 미표시 처리.
 - [ ] **이상 레시피 보정**: 5046kcal 컵누들(`스푼 숫자` 역순 파서 버그), 63kcal 비빔밥(밥 누락), `없음`/`대용량` amount 입력 레시피 수동 보정.
 - [ ] **롱폼 영상 지원**: 숏츠 외 일반 영상(long-form)도 크롤링·레시피 추출 가능하도록 파이프라인 확장. scrapetube `content_type` 파라미터 및 API 범위 조정 필요.
-- [ ] **RAG 식단 플래너**: 칼로리 기반 레시피 필터링 + Gemini 식단 조합 (1주일 자동 큐레이션 기초).
 
 ### v3.0 — 유저 경험 고도화 & 리텐션
 - [ ] **소셜 로그인**: 구글/카카오 연동.

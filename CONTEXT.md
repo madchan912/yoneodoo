@@ -49,6 +49,7 @@
   - `GET /channel-info?channel_url=` — 채널 전체 숏츠 수 조회
   - `GET /health` — 생존 확인
   - **스케줄러**: 매일 03:00 active 유튜버 순차 크롤링 → 07:00 Discord 리포트
+- `POST /api/v1/search/meal-plan` — RAG 식단 플래너 (공개). `{ "query": "자연어" }` → Gemini 조건 추출 → pgvector 유사도 검색(coverage_pct≥50) → Gemini 식단 조합. `{ meal_plan, recipes, conditions }` 반환.
 - **Admin (`/api/v1/admin/**`)** — 헤더 `X-Admin-Secret` 인증 필수. 주요 엔드포인트:
   - `GET /api/v1/admin/dashboard/stats` — 대시보드 집계
   - `GET /api/v1/admin/recipes`, `GET /api/v1/admin/recipes/{id}`, `PUT /api/v1/admin/recipes/{id}` — 레시피 CRUD
@@ -147,4 +148,4 @@
 
 ---
 
-*내부 논의 기준으로 정리됨: v1.5/v1.9 완료(2026-07-07). v2.0 핵심 기능 완료(2026-07-15~16): FastAPI 전환, 다중 소스 수집, Gemini Flash, NEEDS_REVIEW, 유튜버 관리 UI, 채널 영상 수 조회, 배치 스케줄러(03:00), Discord 알림(07:00), IP 차단 감지·중단, 크롤링 안정성 강화, 영양성분 파이프라인(ingredient_nutrition 159건·recipe_nutrition 194건·coverage 83.1%). v2.0 잔여: recipe_nutrition API 연동, 이상 레시피 보정, 롱폼 영상 지원, RAG 식단 플래너.*
+*내부 논의 기준으로 정리됨: v1.5/v1.9 완료(2026-07-07). v2.0 핵심 기능 완료(2026-07-15~17): FastAPI 전환, 다중 소스 수집, Gemini Flash, NEEDS_REVIEW, 유튜버 관리 UI, 채널 영상 수 조회, 배치 스케줄러(03:00), Discord 알림(07:00), IP 차단 감지·중단, 크롤링 안정성 강화, 영양성분 파이프라인(ingredient_nutrition 159건·recipe_nutrition 194건·coverage 83.1%), RAG 식단 플래너(POST /api/v1/search/meal-plan). v2.0 잔여: recipe_nutrition API 연동, 이상 레시피 보정, 롱폼 영상 지원.*
