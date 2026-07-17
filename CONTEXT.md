@@ -94,7 +94,7 @@
 - API: `application.yaml`에서 기본 프로필 `local`; DB는 `application-local.yaml` / `application-prod.yaml`. 운영은 `DB_URL`, `DB_USER`, `DB_PASSWORD`. **어드민**은 환경변수 `ADMIN_SECRET`. **FastAPI 서버 URL**은 `YONEODOO_DATA_URL` (기본값: `http://localhost:8000`).
 - Data: `yoneodoo-data/.env` (Git 제외). 주요 환경변수: `GEMINI_API_KEY`, `API_BASE_URL`(Spring recipes 엔드포인트), `SPRING_API_BASE_URL`(Spring 루트, 기본 `http://localhost:8080`), `ADMIN_SECRET`(Spring 어드민 인증), `DISCORD_WEBHOOK_URL`(배치 리포트 웹훅, 없으면 알림 스킵).
 - 웹은 **`VITE_API_BASE_URL`** 로 API 오리진 설정 (Vite).
-- **CORS**: `CorsConfig.java`에서 전역 관리. 허용 오리진: `http://localhost:5173`, `http://43.201.95.155`, `https://yoneodoo.com`, `https://www.yoneodoo.com`.
+- **CORS**: `CorsConfig.java`에서 전역 관리. 허용 오리진: `http://localhost:5173`, `http://3.37.238.221`, `https://yoneodoo.com`, `https://www.yoneodoo.com`.
 - **환경 파일:** `yoneodoo-web`은 `.env` / `.env.*`를 Git에서 제외. `scripts/.env.sync`도 Git 제외(비밀).
 - **DB**: AWS RDS PostgreSQL (`yoneodoo-db`, `yoneodoo-db.cvgskwe4mv95.ap-northeast-2.rds.amazonaws.com`, db.t3.micro). Neon에서 이전 완료(2026-06-17).
 - **DB 동기화(수동):** `yoneodoo-api/scripts/sync_prod_to_local_db.py` — Docker 기반으로 운영(RDS) `pg_dump` → 로컬 `pg_restore`. pg_dump/pg_restore는 `SYNC_PG_IMAGE`(기본 `postgres:16`) Docker 컨테이너 안에서 실행하므로 로컬에 PostgreSQL 바이너리 불필요. 접속 정보는 `scripts/.env.sync`(Git 제외, `SYNC_DOCKER_CONTAINER`, `SYNC_PG_IMAGE` 포함).
