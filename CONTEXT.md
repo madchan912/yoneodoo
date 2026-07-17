@@ -75,7 +75,7 @@
 
 ## 웹 라우팅
 
-- `/` — 사용자 앱 (`App.jsx`) — 재료 검색 / 요리명 검색 토글, 냉장고 관리
+- `/` — 사용자 앱 (`App.jsx`) — 재료 검색 / 요리명 검색 토글, 냉장고 관리, 🤖 AI 식단 플래너 버튼(우측 하단 플로팅) → `MealPlannerModal` 오픈
 - `/admin`, `/admin/recipes`, `/admin/ingredients`, `/admin/youtubers`, `/admin/nutrition` — **MVP 관리자 UI** (React Router). 로그인 시크릿은 **sessionStorage** + `adminClient`가 `X-Admin-Secret`으로 전송.
 
 ## 저장 모델 (현재)

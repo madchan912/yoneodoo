@@ -133,6 +133,10 @@
   - 평균 칼로리 599kcal (194건), 분포: 0~200(29건) / 201~400(54건) / 401~600(48건) / 601~(62건).
   - 이상 레시피 분석 완료: 과대(5046kcal 컵누들 — `스푼 숫자` 역순 파싱 버그), 과소(63kcal 비빔밥 — 주재료 밥 누락).
 
+- [x] **AI 식단 플래너 UI 구현** (2026-07-17):
+  - `MealPlannerModal.jsx`: 자연어 입력 → `POST /api/v1/search/meal-plan` 연동. 로딩 스피너, 결과 표시, 참고 레시피 유튜브 링크.
+  - `App.jsx`: 우측 하단 보라색 `🤖 AI 식단` 플로팅 버튼 추가 (냉장고 버튼 위).
+
 - [x] **RAG 식단 플래너 기초 구현** (2026-07-17):
   - `recipe_embeddings` 테이블: `recipe_id`, `embedding vector(768)`, `updated_at`. pgvector `<=>` 코사인 유사도.
   - `GeminiApiService.embedContent()`: `gemini-embedding-001` 모델, `outputDimensionality: 768`.
