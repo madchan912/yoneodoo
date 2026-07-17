@@ -80,7 +80,9 @@
     * `recipe_nutrition`: 194건 칼로리 계산 적재. 한글 단위 전체 지원, 평균 coverage 83.1%.
     * 어드민 영양성분 관리 페이지 (`/admin/nutrition`) — 미매칭/완료 탭, 식품성분표 검색, 수정.
 * **recipe_nutrition API 연동**: 레시피 응답에 칼로리 포함, coverage 50% 미만 미표시 처리.
-* **RAG 식단 플래너** ✅ (2026-07-17): pgvector 임베딩 + Gemini 4단계 파이프라인. `POST /api/v1/search/meal-plan` 배포 완료. 임베딩 백필 214건 완료. UI는 `?beta=true` 파라미터 조건 노출.
+* **RAG 식단 플래너** ✅ (2026-07-17): pgvector 임베딩 + Gemini 4단계 파이프라인. `POST /api/v1/search/meal-plan` 배포 완료. 임베딩 백필 208건(유지만 전체). UI는 `?beta=true` 파라미터 조건 노출.
+* **인프라 정리** ✅ (2026-07-17): EC2 Elastic IP 3.37.238.221 고정. Gemini API 유료 전환(선불 크레딧). 유지만 외 레시피 삭제 — RDS 208건 단일 채널 체제.
+* **넥스트 데이터 목표**: 로컬 PC에서 크롤링 실행 (EC2 YouTube IP 차단), 유지만 채널 데이터 **2000건** 확보 목표.
 
 ---
 

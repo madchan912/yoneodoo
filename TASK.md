@@ -146,6 +146,21 @@
   - `RecipeSearchService`: 4단계 RAG 파이프라인 — ①Gemini 조건 추출(JSON) ②조건 텍스트 벡터화 ③pgvector 유사도 검색(coverage_pct≥50) ④Gemini 식단 조합.
   - `POST /api/v1/search/meal-plan` 공개 API (`RecipeSearchController`). `{ meal_plan, recipes, conditions }` 반환.
 
+- [x] **EC2 IP 변경 + Elastic IP 고정** (2026-07-17):
+  - 기존 EC2(43.201.95.155) → 신규 EC2(3.37.238.221) 이전.
+  - Elastic IP 할당 — 재시작해도 IP 변경 없음.
+  - `CorsConfig.java` 허용 오리진 업데이트, Nginx server_name 수정, CONTEXT.md 반영.
+
+- [x] **Gemini API 유료 전환** (2026-07-17):
+  - 선불 크레딧 충전, 새 API 키 발급.
+  - EC2 `~/.env.data.prod`, 로컬 `yoneodoo-data/.env` 키 교체 완료.
+
+- [x] **유지만 외 레시피 삭제 + 시퀀스 리셋** (2026-07-17):
+  - 1mincook(1), 1mindiet(5), 이름없음(1) 총 7건 삭제.
+  - `recipe_embeddings` 7건, `recipe_nutrition` 1건 연쇄 삭제.
+  - 시퀀스 리셋: `recipes_2_id_seq`=208, `recipe_embeddings_id_seq`=208, `recipe_nutrition_id_seq`=358.
+  - 현재 RDS 레시피: 유지만 208건.
+
 ## 🔮 넥스트 백로그 (v2.0 잔여 ~ v4.0)
 
 ### v2.0 잔여
