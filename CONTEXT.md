@@ -47,8 +47,11 @@
   - `POST /crawl` — 채널 크롤링 시작 (job_id 반환, threading.Thread 백그라운드 실행)
   - `GET /status/{job_id}` — 크롤링 진행 상태 조회
   - `GET /channel-info?channel_url=` — 채널 전체 숏츠 수 조회
+  - `POST /crawl/video` — 단건 영상 크롤링 (job_id 반환, `CrawlVideoRequest.video_url`)
   - `GET /health` — 생존 확인
   - **스케줄러**: 매일 03:00 active 유튜버 순차 크롤링 → 07:00 Discord 리포트
+  - **YouTube IP 차단 주의**: AWS EC2 IP 범위는 YouTube transcript API에서 차단됨. 크롤링은 반드시 **로컬 PC**에서 실행할 것 (로컬 PC IP는 차단 없음 확인 2026-07-17).
+- `POST /api/v1/search/meal-plan` — RAG 식단 플래너 (공개). `{ "query": "자연어" }` → Gemini 조건 추출 → pgvector 유사도 검색(coverage_pct≥50) → Gemini 식단 조합. `{ meal_plan, recipes, conditions }` 반환.
 - **Admin (`/api/v1/admin/**`)** — 헤더 `X-Admin-Secret` 인증 필수. 주요 엔드포인트:
   - `GET /api/v1/admin/dashboard/stats` — 대시보드 집계
   - `GET /api/v1/admin/recipes`, `GET /api/v1/admin/recipes/{id}`, `PUT /api/v1/admin/recipes/{id}` — 레시피 CRUD
@@ -65,12 +68,17 @@
   - `POST /api/v1/admin/youtubers` — 유튜버 등록 (`channelUrl`, `youtuberName`)
   - `DELETE /api/v1/admin/youtubers/{id}` — 유튜버 삭제 (이력 유지)
   - `PATCH /api/v1/admin/youtubers/{id}/toggle` — 유튜버 활성/비활성 토글
+  - `GET /api/v1/admin/nutrition/stats` — 영양성분 전체/완료/미완료 카운트
+  - `GET /api/v1/admin/nutrition/unmatched` — 수동 입력 필요 재료 목록 (source='manual_needed')
+  - `GET /api/v1/admin/nutrition/matched` — 완료 재료 목록 (source != 'manual_needed', 이름순)
+  - `GET /api/v1/admin/nutrition/search?keyword=` — 식품성분표(food_nutrition_master) 키워드 검색 (최대 20건)
+  - `PUT /api/v1/admin/nutrition/{masterName}` — 재료 영양 값 저장
 - **`ingredient_mapping` 테이블** — `raw_name`(유니크) → `master_name`: 레시피 JSON `ingredients[].name`과 매칭. 미분류 = 매핑에 없는 raw_name.
 
 ## 웹 라우팅
 
-- `/` — 사용자 앱 (`App.jsx`) — 재료 검색 / 요리명 검색 토글, 냉장고 관리
-- `/admin`, `/admin/recipes`, `/admin/ingredients`, `/admin/youtubers` — **MVP 관리자 UI** (React Router). 로그인 시크릿은 **sessionStorage** + `adminClient`가 `X-Admin-Secret`으로 전송.
+- `/` — 사용자 앱 (`App.jsx`) — 재료 검색 / 요리명 검색 토글, 냉장고 관리. `?beta=true` 파라미터 시 🤖 AI 식단 플래너 버튼(우측 하단 플로팅) 노출 → `MealPlannerModal` 오픈
+- `/admin`, `/admin/recipes`, `/admin/ingredients`, `/admin/youtubers`, `/admin/nutrition` — **MVP 관리자 UI** (React Router). 로그인 시크릿은 **sessionStorage** + `adminClient`가 `X-Admin-Secret`으로 전송.
 
 ## 저장 모델 (현재)
 
@@ -79,15 +87,20 @@
 - **IngredientMapping**: `raw_name`(유니크), `master_name` — 재료 정규화 핵심 테이블.
 - **WatchedYoutuber**: `watched_youtubers` 테이블 — `channel_url`, `youtuber_name`, `is_active`(배치 크롤링 포함 여부), `last_crawled_at`, `created_at`. `ddl-auto: update`로 자동 생성.
 - **CrawlHistory**: `crawl_history` 테이블 — `youtuber_name`, `channel_url`, `job_id`(FastAPI UUID), `start_idx`, `end_idx`, `status`(running/done/failed), `result_summary`(TEXT, JSON), `triggered_by`(manual/batch), `started_at`, `finished_at`. `ddl-auto: update`로 자동 생성.
+- **IngredientNutrition**: `ingredient_nutrition` 테이블 — `master_name`(UNIQUE, `ingredient_mapping.master_name`과 1:1), 영양성분 7개 필드(calories/protein/fat/saturated_fat/carbohydrate/sugar/sodium, NUMERIC(7,2)), `serving_size`=100, `serving_unit`="g", `source`(foodsafety_kr/manual/gemini_est/manual_needed). 식품성분표 자동 매칭 125건 + Gemini 추정 19건(gemini_est) + 수동 필요 15건(manual_needed, 캡사이신 1건 null 유지). 모든 값은 100g 기준.
+- **FoodNutritionMaster**: `food_nutrition_master` 테이블 — 식품성분표(10개정판) 전 5개 시트 16,535건. `food_name`, `food_group`, 영양성분 7개, `source_ver`(10.0~10.4). 어드민 영양성분 검색 원천 데이터. `food_name` ILIKE 검색 시 DISTINCT ON으로 중복 제거.
+- **RecipeNutrition**: `recipe_nutrition` 테이블 — `recipe_id`(BIGINT UNIQUE), 영양성분 7개(NUMERIC(7,2)), `coverage_pct`(NUMERIC(5,2)). coverage_pct = 계산된 재료수 / 전체 재료수 × 100 (신뢰도 지표). 194건 적재, 평균 coverage 83.1%. scripts/calc_recipe_nutrition.py로 재계산 가능(한글 단위 전체 지원: 스푼=15g, 큰술=15g, 작은술=5g, 컵=200g, 꼬집=1g, 주먹/줌=50g 등).
+- **RecipeEmbedding**: `recipe_embeddings` 테이블 — `recipe_id`(BIGINT UNIQUE), `embedding vector(768)`, `updated_at`. pgvector `<=>` 코사인 유사도 검색. Gemini `gemini-embedding-001` 모델 생성(outputDimensionality: 768). 현재 208건 적재(유지만 전체). 시퀀스명: `recipe_embeddings_id_seq`.
 
 ## 설정·환경
 
 - API: `application.yaml`에서 기본 프로필 `local`; DB는 `application-local.yaml` / `application-prod.yaml`. 운영은 `DB_URL`, `DB_USER`, `DB_PASSWORD`. **어드민**은 환경변수 `ADMIN_SECRET`. **FastAPI 서버 URL**은 `YONEODOO_DATA_URL` (기본값: `http://localhost:8000`).
 - Data: `yoneodoo-data/.env` (Git 제외). 주요 환경변수: `GEMINI_API_KEY`, `API_BASE_URL`(Spring recipes 엔드포인트), `SPRING_API_BASE_URL`(Spring 루트, 기본 `http://localhost:8080`), `ADMIN_SECRET`(Spring 어드민 인증), `DISCORD_WEBHOOK_URL`(배치 리포트 웹훅, 없으면 알림 스킵).
 - 웹은 **`VITE_API_BASE_URL`** 로 API 오리진 설정 (Vite).
-- **CORS**: `CorsConfig.java`에서 전역 관리. 허용 오리진: `http://localhost:5173`, `http://43.201.95.155`, `https://yoneodoo.com`, `https://www.yoneodoo.com`.
+- **CORS**: `CorsConfig.java`에서 전역 관리. 허용 오리진: `http://localhost:5173`, `http://3.37.238.221`, `https://yoneodoo.com`, `https://www.yoneodoo.com`.
 - **환경 파일:** `yoneodoo-web`은 `.env` / `.env.*`를 Git에서 제외. `scripts/.env.sync`도 Git 제외(비밀).
 - **DB**: AWS RDS PostgreSQL (`yoneodoo-db`, `yoneodoo-db.cvgskwe4mv95.ap-northeast-2.rds.amazonaws.com`, db.t3.micro). Neon에서 이전 완료(2026-06-17).
+- **DB 시퀀스**: `recipes` 테이블 시퀀스 이름은 `recipes_2_id_seq` (`recipes_id_seq` 아님 — JPA 자동 생성 명칭). `recipe_embeddings_id_seq`, `recipe_nutrition_id_seq`은 표준 명칭.
 - **DB 동기화(수동):** `yoneodoo-api/scripts/sync_prod_to_local_db.py` — Docker 기반으로 운영(RDS) `pg_dump` → 로컬 `pg_restore`. pg_dump/pg_restore는 `SYNC_PG_IMAGE`(기본 `postgres:16`) Docker 컨테이너 안에서 실행하므로 로컬에 PostgreSQL 바이너리 불필요. 접속 정보는 `scripts/.env.sync`(Git 제외, `SYNC_DOCKER_CONTAINER`, `SYNC_PG_IMAGE` 포함).
 
 ## 환경 이전 시 수동 복사 필요 파일 (Git 미추적)
@@ -99,16 +112,19 @@
 | `yoneodoo-web/.env` | VITE_API_BASE_URL. 없으면 API 호출 엔드포인트 빈값 |
 | `yoneodoo-data/.env` | GEMINI_API_KEY, API_BASE_URL, SPRING_API_BASE_URL, ADMIN_SECRET, DISCORD_WEBHOOK_URL |
 | `yoneodoo-data/.env.data.prod` | EC2 운영용 — `test_discord.py` 실행 시 웹훅 URL 로드에 사용 |
+| `02_Yoneodoo/scripts/calc_recipe_nutrition.py` | RDS 직접 접속 — recipe_nutrition 재계산 스크립트 (환경변수 없이 하드코딩, .gitignore 제외 아님이나 민감정보 포함) |
+| `02_Yoneodoo/scripts/fill_nutrition_gemini.py` | GEMINI_API_KEY + RDS 직접 접속 — manual_needed 항목 Gemini 추정값 채우기 |
+| `02_Yoneodoo/scripts/insert_nutrition.py` | RDS 직접 접속 — ingredient_nutrition 초기 적재 (재실행 시 사용) |
 
-## 인프라 현황 (2026-07-07 기준)
+## 인프라 현황 (2026-07-17 기준)
 
 | 구성 요소 | 서비스 | 세부 정보 |
 |-----------|--------|-----------|
-| EC2 | AWS ap-northeast-2 | `yoneodoo-api`(8080) + `yoneodoo-data`(8000, v2.0 배포 예정), t3.micro, Ubuntu — 백엔드(Docker) + 프론트(Nginx) 통합 |
-| RDS | AWS ap-northeast-2 | `yoneodoo-db`, PostgreSQL, db.t3.micro |
+| EC2 | AWS ap-northeast-2 | IP `3.37.238.221` (Elastic IP 고정 — 재시작해도 변경 없음), `yoneodoo-api`(8080) + `yoneodoo-data`(8000), t3.micro, Ubuntu — 백엔드(Docker) + 프론트(Nginx) 통합 |
+| RDS | AWS ap-northeast-2 | `yoneodoo-db`, PostgreSQL, db.t3.micro. 현재 레시피: 유지만 208건 (2026-07-17 정리 완료) |
 | IAM | AWS | `yoneodoo-admin` 사용자, 최소 권한 |
 | 보안 그룹 | AWS | `yoneodoo-ec2-sg`(HTTP/SSH), `yoneodoo-rds-sg`(EC2 → RDS 5432) |
-| pem 키 | 로컬 | `C:\Users\madchan\Desktop\yoneodoo-key.pem` (Git 제외) |
+| pem 키 | 로컬 | `C:\Users\MADCHAN\Desktop\yoneodoo-key.pem` (Git 제외) |
 | GitHub Actions | CI/CD | main 브랜치 push → EC2 자동 배포 |
 | 서비스 URL | — | https://yoneodoo.com (2026-07-07 정식 적용) |
 | 도메인 | 가비아 | yoneodoo.com, www.yoneodoo.com (DNS A레코드 → EC2) |
@@ -136,4 +152,4 @@
 
 ---
 
-*내부 논의 기준으로 정리됨: v1.5/v1.9 완료(2026-07-07). v2.0 핵심 기능 완료(2026-07-15): FastAPI 전환, 다중 소스 수집, Gemini Flash, NEEDS_REVIEW, 유튜버 관리 UI, 채널 영상 수 조회, 배치 스케줄러(03:00), Discord 알림(07:00), IP 차단 감지·중단, 크롤링 안정성 강화. v2.0 잔여: 롱폼 영상 지원, RAG 기초.*
+*내부 논의 기준으로 정리됨: v1.5/v1.9 완료(2026-07-07). v2.0 완료(2026-07-15~17): FastAPI 전환, 다중 소스 수집, Gemini Flash, NEEDS_REVIEW, 유튜버 관리 UI, 채널 영상 수 조회, 배치 스케줄러(03:00), Discord 알림(07:00), IP 차단 감지·중단, 크롤링 안정성 강화, 영양성분 파이프라인(ingredient_nutrition 159건·recipe_nutrition 194건·coverage 83.1%), RAG 식단 플래너(POST /api/v1/search/meal-plan, recipe_embeddings 208건, ?beta=true 조건 노출), EC2 Elastic IP 고정(3.37.238.221), Gemini API 유료 전환(선불 크레딧), 유지만 외 레시피 삭제(208건 유지). v2.0 잔여: recipe_nutrition API 연동, 이상 레시피 보정, 롱폼 영상 지원, 로컬 크롤링으로 데이터 2000건 확보.*

@@ -117,12 +117,57 @@
   - `discord.py`: 배치 결과 임베드 전송 (차단=빨강/실패=주황/정상=초록). 유튜버별 결과 상세 포함.
   - 환경변수 추가: `DISCORD_WEBHOOK_URL`, `SPRING_API_BASE_URL`, `ADMIN_SECRET`.
   - `test_discord.py`: 웹훅 테스트 스크립트 (`.env.data.prod`에서 URL 로드).
+- [x] **식품성분표 기반 영양성분 DB 구축 + 어드민 관리 페이지** (2026-07-15):
+  - `food_nutrition_master` 테이블: 식품성분표(10개정판) 전 5개 시트 16,535건 적재 (`scripts/insert_food_master.py`).
+  - `ingredient_nutrition` 테이블: `ingredient_mapping.master_name` 기준 159건 — 자동 매칭 125건(foodsafety_kr) + 수동 필요 34건(manual_needed) (`scripts/insert_nutrition.py`).
+  - `NutritionAdminController`: 5개 어드민 엔드포인트 (`GET /stats`, `GET /unmatched`, `GET /matched`, `GET /search`, `PUT /{masterName}`).
+  - `NutritionManagePage.jsx`: 좌우 분할 UI — 좌측 미매칭/완료 탭·통계, 우측 식품성분표 검색·영양값 폼·저장. `/admin/nutrition` 라우트 추가.
+  - Gemini API로 `manual_needed` 19건 추정값 채우기 (`scripts/fill_nutrition_gemini.py`, source=`gemini_est`). 캡사이신 1건 null 유지.
+  - 완료 탭: source별 배지(식품DB=초록/AI=주황/수동=파랑), 클릭 시 기존 값 폼 자동 채움·수정 가능.
+
+- [x] **레시피 칼로리 계산 파이프라인 구축** (2026-07-16):
+  - `recipe_nutrition` 테이블 RDS 생성 (coverage_pct 신뢰도 지표 포함).
+  - `scripts/calc_recipe_nutrition.py`: SUCCESS+ACTIVE 레시피 194건 칼로리·영양성분 계산 후 일괄 적재.
+  - 한글 단위 전체 지원: 큰술=15g, 작은술=5g, 컵=200g, **스푼=15g**, 숟가락=15g, 꼬집=1g, 주먹/줌=50g, kg, 반개/반모, 한글 수사(한/두/세...) 등.
+  - 단위 파싱 개선으로 평균 coverage 30% → **83.1%** (+53.1%p), 신뢰도낮음(<50%) 141건 → **14건** (-127건).
+  - 평균 칼로리 599kcal (194건), 분포: 0~200(29건) / 201~400(54건) / 401~600(48건) / 601~(62건).
+  - 이상 레시피 분석 완료: 과대(5046kcal 컵누들 — `스푼 숫자` 역순 파싱 버그), 과소(63kcal 비빔밥 — 주재료 밥 누락).
+
+- [x] **AI 식단 플래너 UI 구현** (2026-07-17):
+  - `MealPlannerModal.jsx`: 자연어 입력 → `POST /api/v1/search/meal-plan` 연동. 로딩 스피너, 결과 표시(** 마크다운 제거), 참고 레시피 유튜브 링크.
+  - `App.jsx`: `?beta=true` URL 파라미터일 때만 `🤖 AI 식단` 플로팅 버튼 노출 (냉장고 버튼 위). 일반 URL에서는 숨김.
+  - EC2 Nginx `index.html` no-cache 설정 추가 → 배포 후 새로고침 없이 즉시 반영.
+
+- [x] **RAG 식단 플래너 기초 구현** (2026-07-17):
+  - `recipe_embeddings` 테이블: `recipe_id`, `embedding vector(768)`, `updated_at`. pgvector `<=>` 코사인 유사도.
+  - `GeminiApiService.embedContent()`: `gemini-embedding-001` 모델, `outputDimensionality: 768`.
+  - `RecipeEmbeddingService.embedAndSave()`: 레시피 저장 시 자동 임베딩 + 백필 API (`POST /api/v1/admin/embeddings/backfill`).
+  - `RecipeEmbeddingRepository`: `CAST(:embedding AS vector)` named parameter (`?2::vector` → Hibernate ParameterLabelException 수정).
+  - `RecipeSearchService`: 4단계 RAG 파이프라인 — ①Gemini 조건 추출(JSON) ②조건 텍스트 벡터화 ③pgvector 유사도 검색(coverage_pct≥50) ④Gemini 식단 조합.
+  - `POST /api/v1/search/meal-plan` 공개 API (`RecipeSearchController`). `{ meal_plan, recipes, conditions }` 반환.
+
+- [x] **EC2 IP 변경 + Elastic IP 고정** (2026-07-17):
+  - 기존 EC2(43.201.95.155) → 신규 EC2(3.37.238.221) 이전.
+  - Elastic IP 할당 — 재시작해도 IP 변경 없음.
+  - `CorsConfig.java` 허용 오리진 업데이트, Nginx server_name 수정, CONTEXT.md 반영.
+
+- [x] **Gemini API 유료 전환** (2026-07-17):
+  - 선불 크레딧 충전, 새 API 키 발급.
+  - EC2 `~/.env.data.prod`, 로컬 `yoneodoo-data/.env` 키 교체 완료.
+
+- [x] **유지만 외 레시피 삭제 + 시퀀스 리셋** (2026-07-17):
+  - 1mincook(1), 1mindiet(5), 이름없음(1) 총 7건 삭제.
+  - `recipe_embeddings` 7건, `recipe_nutrition` 1건 연쇄 삭제.
+  - 시퀀스 리셋: `recipes_2_id_seq`=208, `recipe_embeddings_id_seq`=208, `recipe_nutrition_id_seq`=358.
+  - 현재 RDS 레시피: 유지만 208건.
 
 ## 🔮 넥스트 백로그 (v2.0 잔여 ~ v4.0)
 
 ### v2.0 잔여
+- [x] **임베딩 백필 완료** (2026-07-17): 214건 전체 백필 완료. `success:214, failed:0`. EC2 localhost 직접 호출로 nginx 타임아웃 우회.
+- [ ] **recipe_nutrition API 연동**: `GET /api/v1/recipes` 응답에 칼로리 포함. coverage_pct 50% 미만은 칼로리 미표시 처리.
+- [ ] **이상 레시피 보정**: 5046kcal 컵누들(`스푼 숫자` 역순 파서 버그), 63kcal 비빔밥(밥 누락), `없음`/`대용량` amount 입력 레시피 수동 보정.
 - [ ] **롱폼 영상 지원**: 숏츠 외 일반 영상(long-form)도 크롤링·레시피 추출 가능하도록 파이프라인 확장. scrapetube `content_type` 파라미터 및 API 범위 조정 필요.
-- [ ] **RAG 기초**: 레시피 임베딩 저장 및 유사도 검색 엔드포인트 (v2 후반부).
 
 ### v3.0 — 유저 경험 고도화 & 리텐션
 - [ ] **소셜 로그인**: 구글/카카오 연동.
