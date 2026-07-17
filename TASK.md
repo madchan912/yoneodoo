@@ -161,9 +161,27 @@
   - 시퀀스 리셋: `recipes_2_id_seq`=208, `recipe_embeddings_id_seq`=208, `recipe_nutrition_id_seq`=358.
   - 현재 RDS 레시피: 유지만 208건.
 
-## 🔮 넥스트 백로그 (v2.0 잔여 ~ v4.0)
+## ✅ 완료된 작업 (v2.1)
 
-### v2.0 잔여
+- [x] **상태값 정리** (2026-07-17): `PENDING→UNMATCHED`(정규화 미완료), `NEEDS_REVIEW→INCOMPLETE`(수량 입력 필요). RDS UPDATE 실행 완료.
+- [x] **checkAndUpdateRecipeStatus 로직 개선**: UNMATCHED/INCOMPLETE를 종료 상태에서 제외 → 매핑 저장 시마다 재평가. 재료 없으면 UNMATCHED, 모두 매핑됐으나 amount null 있으면 INCOMPLETE.
+- [x] **파이프라인 단순화**: 2차 Gemini 폴백(extract_recipe_from_desc_comment) 제거. 자막+더보기+댓글 세 소스를 처음부터 한번에 Gemini에 전달.
+- [x] **영양성분 자동화** (pipeline.py): 레시피 저장 성공 후 ① 새 master_name Gemini 추정→ingredient_nutrition upsert ② recipe_nutrition 계산→저장. 실패해도 레시피 저장은 유지.
+- [x] **PUT /admin/nutrition/{masterName} upsert 전환**: 기존 404 반환 → 없으면 신규 생성, 있으면 갱신.
+- [x] **GET /admin/nutrition/manual-needed 추가**: source='manual_needed' 재료 목록 반환.
+- [x] **POST /recipes/{id}/nutrition 추가**: 파이프라인이 recipe_nutrition 합계를 저장하는 내부 엔드포인트 (인증 없음).
+- [x] **NutritionManagePage 확인필요 탭**: 미매칭/확인필요/완료 3탭 구조. 확인필요=AI 추정 실패 재료(빨간 테마), 저장 후 세 목록 일괄 갱신.
+- [x] **Recipe 엔티티 description/firstComment 필드 추가**: AdminRecipeDetailResponse·UpdateRequest 연동. DB 마이그레이션 수동 실행 필요.
+- [x] **RecipeEditModal 아코디언 UI**: 왼쪽 패널을 자막/더보기/첫번째댓글 3섹션 아코디언으로 교체. 한 번에 하나만 열리고, 열린 섹션이 flex-grow:1 차지. 기본=자막.
+- [ ] **DB 마이그레이션 수동 실행 필요**:
+  ```sql
+  ALTER TABLE recipes ADD COLUMN IF NOT EXISTS description TEXT;
+  ALTER TABLE recipes ADD COLUMN IF NOT EXISTS first_comment TEXT;
+  ```
+
+## 🔮 넥스트 백로그 (v2.1 잔여 ~ v4.0)
+
+### v2.1 잔여
 - [x] **임베딩 백필 완료** (2026-07-17): 214건 전체 백필 완료. `success:214, failed:0`. EC2 localhost 직접 호출로 nginx 타임아웃 우회.
 - [ ] **recipe_nutrition API 연동**: `GET /api/v1/recipes` 응답에 칼로리 포함. coverage_pct 50% 미만은 칼로리 미표시 처리.
 - [ ] **이상 레시피 보정**: 5046kcal 컵누들(`스푼 숫자` 역순 파서 버그), 63kcal 비빔밥(밥 누락), `없음`/`대용량` amount 입력 레시피 수동 보정.
