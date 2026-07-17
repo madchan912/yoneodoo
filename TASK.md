@@ -134,8 +134,9 @@
   - 이상 레시피 분석 완료: 과대(5046kcal 컵누들 — `스푼 숫자` 역순 파싱 버그), 과소(63kcal 비빔밥 — 주재료 밥 누락).
 
 - [x] **AI 식단 플래너 UI 구현** (2026-07-17):
-  - `MealPlannerModal.jsx`: 자연어 입력 → `POST /api/v1/search/meal-plan` 연동. 로딩 스피너, 결과 표시, 참고 레시피 유튜브 링크.
-  - `App.jsx`: 우측 하단 보라색 `🤖 AI 식단` 플로팅 버튼 추가 (냉장고 버튼 위).
+  - `MealPlannerModal.jsx`: 자연어 입력 → `POST /api/v1/search/meal-plan` 연동. 로딩 스피너, 결과 표시(** 마크다운 제거), 참고 레시피 유튜브 링크.
+  - `App.jsx`: `?beta=true` URL 파라미터일 때만 `🤖 AI 식단` 플로팅 버튼 노출 (냉장고 버튼 위). 일반 URL에서는 숨김.
+  - EC2 Nginx `index.html` no-cache 설정 추가 → 배포 후 새로고침 없이 즉시 반영.
 
 - [x] **RAG 식단 플래너 기초 구현** (2026-07-17):
   - `recipe_embeddings` 테이블: `recipe_id`, `embedding vector(768)`, `updated_at`. pgvector `<=>` 코사인 유사도.
@@ -148,7 +149,7 @@
 ## 🔮 넥스트 백로그 (v2.0 잔여 ~ v4.0)
 
 ### v2.0 잔여
-- [ ] **임베딩 백필**: Gemini 쿼터 리셋 후 214건 백필 재시도. `POST /api/v1/admin/embeddings/backfill` (EC2 localhost로 SSH 직접 호출).
+- [x] **임베딩 백필 완료** (2026-07-17): 214건 전체 백필 완료. `success:214, failed:0`. EC2 localhost 직접 호출로 nginx 타임아웃 우회.
 - [ ] **recipe_nutrition API 연동**: `GET /api/v1/recipes` 응답에 칼로리 포함. coverage_pct 50% 미만은 칼로리 미표시 처리.
 - [ ] **이상 레시피 보정**: 5046kcal 컵누들(`스푼 숫자` 역순 파서 버그), 63kcal 비빔밥(밥 누락), `없음`/`대용량` amount 입력 레시피 수동 보정.
 - [ ] **롱폼 영상 지원**: 숏츠 외 일반 영상(long-form)도 크롤링·레시피 추출 가능하도록 파이프라인 확장. scrapetube `content_type` 파라미터 및 API 범위 조정 필요.
