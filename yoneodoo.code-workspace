@@ -1,0 +1,15 @@
+{
+  "folders": [
+    { "name": "🌐 web", "path": "yoneodoo-web" },
+    { "name": "⚙️ api", "path": "yoneodoo-api" },
+    { "name": "🤖 data", "path": "yoneodoo-data" },
+    { "name": "📁 root", "path": "." }
+  ],
+  "settings": {
+    "files.exclude": {
+      "yoneodoo-web": true,
+      "yoneodoo-api": true,
+      "yoneodoo-data": true
+    }
+  }
+}
