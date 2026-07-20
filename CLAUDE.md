@@ -54,6 +54,7 @@ done
 - 변경이 있는 각 레포마다 **독립적인 커밋**을 제안할 것.
 - TASK.md를 함께 수정했다면 메시지 끝에 `& TASK.md 업데이트`를 붙일 것.
 - 사용자가 바로 실행할 수 있도록 `cd → git add → git commit → git push`를 한 흐름으로 제공할 것.
+- 루트(`02_Yoneodoo`) 레포는 GitHub Actions CI/CD가 없고 문서만 관리하므로 `develop` 브랜치 없이 `main`에 직접 커밋/푸시할 것. `develop` 브랜치로 머지하는 절차 불필요.
 
 ### 커밋 메시지 형식
 
@@ -147,3 +148,27 @@ git push
 해당 파일을 생성·수정했을 경우, 반드시 사용자에게 아래 내용을 안내할 것:
 
 > "이 파일은 Git에 추적되지 않으므로 다른 환경(맥북, 데스크톱 등)에서 수동으로 복사·동기화해야 합니다."
+
+---
+
+## 8. RDS 접속 방법
+
+RDS는 퍼블릭 접근이 제한되어 있어 반드시 EC2를 거쳐야 한다.
+로컬 IP가 보안그룹에 허용된 경우 로컬에서 직접 접속 가능.
+
+**EC2 SSH 접속:**
+```bash
+ssh -i "C:\Users\MADCHAN\Desktop\yoneodoo-key.pem" ubuntu@3.37.238.221
+```
+
+**EC2에서 RDS psql 접속:**
+접속 정보는 `yoneodoo-api/scripts/.env.sync` 파일 참고.
+(`SYNC_SOURCE_HOST`, `SYNC_SOURCE_USER`, `SYNC_SOURCE_PASSWORD`, `SYNC_SOURCE_DB`)
+
+```bash
+psql -h [SYNC_SOURCE_HOST] -U [SYNC_SOURCE_USER] -d [SYNC_SOURCE_DB] --password
+```
+
+**로컬에서 직접 접속 (보안그룹에 로컬 IP 허용된 경우):**
+동일하게 `.env.sync` 접속 정보 사용.
+보안그룹 미허용 시 AWS 콘솔에서 현재 IP 추가 필요.

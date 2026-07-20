@@ -171,13 +171,9 @@
 - [x] **GET /admin/nutrition/manual-needed 추가**: source='manual_needed' 재료 목록 반환.
 - [x] **POST /recipes/{id}/nutrition 추가**: 파이프라인이 recipe_nutrition 합계를 저장하는 내부 엔드포인트 (인증 없음).
 - [x] **NutritionManagePage 확인필요 탭**: 미매칭/확인필요/완료 3탭 구조. 확인필요=AI 추정 실패 재료(빨간 테마), 저장 후 세 목록 일괄 갱신.
-- [x] **Recipe 엔티티 description/firstComment 필드 추가**: AdminRecipeDetailResponse·UpdateRequest 연동. DB 마이그레이션 수동 실행 필요.
+- [x] **Recipe 엔티티 description/firstComment 필드 추가**: AdminRecipeDetailResponse·UpdateRequest 연동. DB 마이그레이션 완료 확인(2026-07-20).
 - [x] **RecipeEditModal 아코디언 UI**: 왼쪽 패널을 자막/더보기/첫번째댓글 3섹션 아코디언으로 교체. 한 번에 하나만 열리고, 열린 섹션이 flex-grow:1 차지. 기본=자막.
-- [ ] **DB 마이그레이션 수동 실행 필요**:
-  ```sql
-  ALTER TABLE recipes ADD COLUMN IF NOT EXISTS description TEXT;
-  ALTER TABLE recipes ADD COLUMN IF NOT EXISTS first_comment TEXT;
-  ```
+- [x] **DB 마이그레이션 확인 완료 (2026-07-20)**: 운영 RDS `recipes` 테이블에 `description`, `first_comment` 컬럼 이미 존재 확인. 추가 실행 불필요.
 
 ## 🔮 넥스트 백로그 (v2.1 잔여 ~ v4.0)
 
