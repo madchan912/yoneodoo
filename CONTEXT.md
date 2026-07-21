@@ -93,6 +93,7 @@
 - **FoodNutritionMaster**: `food_nutrition_master` 테이블 — 식품성분표(10개정판) 전 5개 시트 16,535건. `food_name`, `food_group`, 영양성분 7개, `source_ver`(10.0~10.4). 어드민 영양성분 검색 원천 데이터. `food_name` ILIKE 검색 시 DISTINCT ON으로 중복 제거.
 - **RecipeNutrition**: `recipe_nutrition` 테이블 — `recipe_id`(BIGINT UNIQUE), 영양성분 7개(NUMERIC(7,2)), `coverage_pct`(NUMERIC(5,2)). coverage_pct = 계산된 재료수 / 전체 재료수 × 100 (신뢰도 지표). 194건 적재, 평균 coverage 83.1%. scripts/calc_recipe_nutrition.py로 재계산 가능(한글 단위 전체 지원: 스푼=15g, 큰술=15g, 작은술=5g, 컵=200g, 꼬집=1g, 주먹/줌=50g 등).
 - **RecipeEmbedding**: `recipe_embeddings` 테이블 — `recipe_id`(BIGINT UNIQUE), `embedding vector(768)`, `updated_at`. pgvector `<=>` 코사인 유사도 검색. Gemini `gemini-embedding-001` 모델 생성(outputDimensionality: 768). 현재 208건 적재(유지만 전체). 시퀀스명: `recipe_embeddings_id_seq`.
+- **RagSearchLog**: `rag_search_log` 테이블 — RAG 식단 플래너 사용 이력. `user_id`(소셜 로그인 전까지 항상 null), `query`(사용자 원문), `conditions`/`recipes`(JSONB, Gemini 추출 조건·후보 레시피 목록), `meal_plan`(생성된 텍스트), `created_at`. `RecipeSearchService.search()`가 식단 조합 완료 시마다 저장(실패해도 검색 응답에는 영향 없음). 인덱스: `created_at DESC`, `user_id`.
 
 ## 설정·환경
 
