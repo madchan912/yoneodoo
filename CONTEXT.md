@@ -48,8 +48,11 @@
   - `GET /status/{job_id}` — 크롤링 진행 상태 조회
   - `GET /channel-info?channel_url=` — 채널 전체 숏츠 수 조회
   - `POST /crawl/video` — 단건 영상 크롤링 (job_id 반환, `CrawlVideoRequest.video_url`)
+  - `POST /batch/run` — active 유튜버 전체 순차 크롤링을 백그라운드로 즉시 시작 (job_id 반환). 완료 시 Discord 알림, IP 차단 감지 시 즉시 중단.
+  - `GET /batch/status/{job_id}` — 수동 배치 진행 상황 조회 (`total_youtubers`, `completed_youtubers`, `current_youtuber`, `summary`)
   - `GET /health` — 생존 확인
-  - **스케줄러**: 매일 03:00 active 유튜버 순차 크롤링 → 07:00 Discord 리포트
+  - **수동 배치 전환 (2026-07-21)**: EC2 YouTube IP 차단으로 03:00 자동 배치(`scheduler.py`의 `_batch_crawl` cron) 비활성화. 로컬 어드민(`localhost:5173`, `localhost:8000`)에서 "전체 배치 실행" 버튼으로 수동 트리거. 07:00 Discord 리포트 cron은 유지(배치 이력 없으면 스킵).
+  - **유튜버명 처리**: `run_channel_crawl()`에 `youtuber_name`을 명시적으로 넘기면 그 값을 그대로 사용(watched_youtubers 등록명), 생략 시에만 채널 URL `@handle` 파싱 폴백. 이전에 있던 `1mindiet→1분다이어터` 하드코딩 매핑은 제거(DB 등록명을 그대로 사용하므로 불필요).
   - **YouTube IP 차단 주의**: AWS EC2 IP 범위는 YouTube transcript API에서 차단됨. 크롤링은 반드시 **로컬 PC**에서 실행할 것 (로컬 PC IP는 차단 없음 확인 2026-07-17).
 - `POST /api/v1/search/meal-plan` — RAG 식단 플래너 (공개). `{ "query": "자연어" }` → Gemini 조건 추출 → pgvector 유사도 검색(coverage_pct≥50) → Gemini 식단 조합. `{ meal_plan, recipes, conditions }` 반환.
 - **Admin (`/api/v1/admin/**`)** — 헤더 `X-Admin-Secret` 인증 필수. 주요 엔드포인트:
